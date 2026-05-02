@@ -1,0 +1,790 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2501 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (# AGENTSYST - Blueprint detallado del Control Center v1) Tj
+1 0 0 1 50 728 Tm () Tj
+1 0 0 1 50 714 Tm (## 1. Objetivo real del panel) Tj
+1 0 0 1 50 700 Tm (El panel de control interno de AGENTSYST no es:) Tj
+1 0 0 1 50 686 Tm (- la web de captación) Tj
+1 0 0 1 50 672 Tm (- el backend externo) Tj
+1 0 0 1 50 658 Tm (- un CRM decorativo) Tj
+1 0 0 1 50 644 Tm (- un dashboard genérico) Tj
+1 0 0 1 50 630 Tm () Tj
+1 0 0 1 50 616 Tm (El panel es el **motor interno de trabajo** donde un caso entra, se analiza, se convierte en) Tj
+1 0 0 1 50 602 Tm (propuesta, se demuestra, se cierra y, si el cliente aprueba, pasa a implementación real.) Tj
+1 0 0 1 50 588 Tm () Tj
+1 0 0 1 50 574 Tm (La misión del panel es permitir que AGENTSYST trabaje con orden, velocidad y criterio) Tj
+1 0 0 1 50 560 Tm (comercial-operativo.) Tj
+1 0 0 1 50 546 Tm () Tj
+1 0 0 1 50 532 Tm (Debe servir para:) Tj
+1 0 0 1 50 518 Tm (- captar mejor) Tj
+1 0 0 1 50 504 Tm (- analizar mejor) Tj
+1 0 0 1 50 490 Tm (- proponer mejor) Tj
+1 0 0 1 50 476 Tm (- demostrar mejor) Tj
+1 0 0 1 50 462 Tm (- cerrar mejor) Tj
+1 0 0 1 50 448 Tm (- implementar mejor) Tj
+1 0 0 1 50 434 Tm () Tj
+1 0 0 1 50 420 Tm (---) Tj
+1 0 0 1 50 406 Tm () Tj
+1 0 0 1 50 392 Tm (## 2. Principio rector del sistema) Tj
+1 0 0 1 50 378 Tm (Todo empieza con un **caso**.) Tj
+1 0 0 1 50 364 Tm () Tj
+1 0 0 1 50 350 Tm (Ese caso puede entrar de dos formas:) Tj
+1 0 0 1 50 336 Tm (1. por importación desde un lead captado) Tj
+1 0 0 1 50 322 Tm (2. por creación manual desde el panel) Tj
+1 0 0 1 50 308 Tm () Tj
+1 0 0 1 50 294 Tm (Esto es obligatorio porque AGENTSYST no solo responde a lo que piden los leads. También) Tj
+1 0 0 1 50 280 Tm (detecta oportunidades y propone soluciones aunque el cliente no las haya solicitado) Tj
+1 0 0 1 50 266 Tm (explícitamente.) Tj
+1 0 0 1 50 252 Tm () Tj
+1 0 0 1 50 238 Tm (---) Tj
+1 0 0 1 50 224 Tm () Tj
+1 0 0 1 50 210 Tm (## 3. Lo que ya hemos implementado) Tj
+1 0 0 1 50 196 Tm () Tj
+1 0 0 1 50 182 Tm (## 3.1 Estructura base del panel) Tj
+1 0 0 1 50 168 Tm (Ya existe una V1 del panel en el repo:) Tj
+1 0 0 1 50 154 Tm (- `https://github.com/dcvaleria359-ops/agentsyst-center.git`) Tj
+1 0 0 1 50 140 Tm () Tj
+1 0 0 1 50 126 Tm (Se ha implementado una base navegable con:) Tj
+1 0 0 1 50 112 Tm (- Resumen) Tj
+1 0 0 1 50 98 Tm (- Casos) Tj
+1 0 0 1 50 84 Tm (- Diagnóstico / fases intermedias del flujo anterior) Tj
+1 0 0 1 50 70 Tm (- Producción / validación / entrega en distintas iteraciones) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 2387 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (- Biblioteca) Tj
+1 0 0 1 50 728 Tm (- Agentes) Tj
+1 0 0 1 50 714 Tm () Tj
+1 0 0 1 50 700 Tm (Después se corrigió el enfoque para que el panel deje de depender de ejemplos de relleno y) Tj
+1 0 0 1 50 686 Tm (pase a girar alrededor de **Nuevo caso**.) Tj
+1 0 0 1 50 672 Tm () Tj
+1 0 0 1 50 658 Tm (---) Tj
+1 0 0 1 50 644 Tm () Tj
+1 0 0 1 50 630 Tm (## 3.2 Nuevo caso como punto de entrada) Tj
+1 0 0 1 50 616 Tm (Ya se implementó una lógica visual y de interfaz para que el panel empiece por:) Tj
+1 0 0 1 50 602 Tm (- **Nuevo caso**) Tj
+1 0 0 1 50 588 Tm () Tj
+1 0 0 1 50 574 Tm (Y no por una tabla vieja con datos ficticios visibles.) Tj
+1 0 0 1 50 560 Tm () Tj
+1 0 0 1 50 546 Tm (Esto corrige un fallo importante del enfoque inicial.) Tj
+1 0 0 1 50 532 Tm () Tj
+1 0 0 1 50 518 Tm (---) Tj
+1 0 0 1 50 504 Tm () Tj
+1 0 0 1 50 490 Tm (## 3.3 Base funcional actual) Tj
+1 0 0 1 50 476 Tm (A día de hoy existe:) Tj
+1 0 0 1 50 462 Tm (- una V1 testeable) Tj
+1 0 0 1 50 448 Tm (- un flujo base visible) Tj
+1 0 0 1 50 434 Tm (- navegación interna) Tj
+1 0 0 1 50 420 Tm (- fichas de caso) Tj
+1 0 0 1 50 406 Tm (- estructura de agentes y fases como esqueleto) Tj
+1 0 0 1 50 392 Tm (- repo remoto preparado) Tj
+1 0 0 1 50 378 Tm (- despliegue conectado a Netlify por tu parte) Tj
+1 0 0 1 50 364 Tm () Tj
+1 0 0 1 50 350 Tm (Pero todavía **no existe el motor real funcionando con agentes obreros conectados**.) Tj
+1 0 0 1 50 336 Tm () Tj
+1 0 0 1 50 322 Tm (---) Tj
+1 0 0 1 50 308 Tm () Tj
+1 0 0 1 50 294 Tm (## 3.4 Documentación ya preparada) Tj
+1 0 0 1 50 280 Tm (Ya se generaron documentos de trabajo previos en `reports/`, y este blueprint consolida el) Tj
+1 0 0 1 50 266 Tm (enfoque correcto tras la corrección de rumbo.) Tj
+1 0 0 1 50 252 Tm () Tj
+1 0 0 1 50 238 Tm (---) Tj
+1 0 0 1 50 224 Tm () Tj
+1 0 0 1 50 210 Tm (## 4. Qué NO está implementado todavía) Tj
+1 0 0 1 50 196 Tm (Todavía falta la parte crítica del sistema:) Tj
+1 0 0 1 50 182 Tm () Tj
+1 0 0 1 50 168 Tm (### 4.1 Agentes reales) Tj
+1 0 0 1 50 154 Tm (Aún no están creados de verdad:) Tj
+1 0 0 1 50 140 Tm (- los agentes obreros) Tj
+1 0 0 1 50 126 Tm (- sus funciones ejecutables) Tj
+1 0 0 1 50 112 Tm (- sus inputs y outputs automáticos) Tj
+1 0 0 1 50 98 Tm (- su conexión real al botón de pasar a la siguiente acción) Tj
+1 0 0 1 50 84 Tm () Tj
+1 0 0 1 50 70 Tm (### 4.2 Flujo automático real) Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 2202 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (Aún no existe:) Tj
+1 0 0 1 50 728 Tm (- botón para lanzar agente) Tj
+1 0 0 1 50 714 Tm (- ejecución real del agente) Tj
+1 0 0 1 50 700 Tm (- entrega de output real al siguiente paso) Tj
+1 0 0 1 50 686 Tm (- trazabilidad completa del encadenado) Tj
+1 0 0 1 50 672 Tm () Tj
+1 0 0 1 50 658 Tm (### 4.3 Persistencia real) Tj
+1 0 0 1 50 644 Tm (Aún no existe:) Tj
+1 0 0 1 50 630 Tm (- base de datos real) Tj
+1 0 0 1 50 616 Tm (- guardado estable de casos) Tj
+1 0 0 1 50 602 Tm (- estados persistentes) Tj
+1 0 0 1 50 588 Tm (- historial persistente) Tj
+1 0 0 1 50 574 Tm () Tj
+1 0 0 1 50 560 Tm (### 4.4 Importación real desde captación) Tj
+1 0 0 1 50 546 Tm (Aún no existe:) Tj
+1 0 0 1 50 532 Tm (- importación real de ficha lead desde la web) Tj
+1 0 0 1 50 518 Tm (- ingestión automática desde formularios) Tj
+1 0 0 1 50 504 Tm (- asociación directa entre lead captado y nuevo caso del motor) Tj
+1 0 0 1 50 490 Tm () Tj
+1 0 0 1 50 476 Tm (### 4.5 Salidas descargables reales) Tj
+1 0 0 1 50 462 Tm (Aún no existe todavía:) Tj
+1 0 0 1 50 448 Tm (- informe de análisis generado de verdad) Tj
+1 0 0 1 50 434 Tm (- briefing de soluciones generado de verdad) Tj
+1 0 0 1 50 420 Tm (- propuesta visual descargable de verdad) Tj
+1 0 0 1 50 406 Tm (- demo enlazada a un flujo real de trabajo) Tj
+1 0 0 1 50 392 Tm () Tj
+1 0 0 1 50 378 Tm (---) Tj
+1 0 0 1 50 364 Tm () Tj
+1 0 0 1 50 350 Tm (## 5. Flujo correcto del trabajo) Tj
+1 0 0 1 50 336 Tm (Este es el flujo que debe regir el sistema.) Tj
+1 0 0 1 50 322 Tm () Tj
+1 0 0 1 50 308 Tm (## Fase 1 - Nuevo caso) Tj
+1 0 0 1 50 294 Tm (### Qué es) Tj
+1 0 0 1 50 280 Tm (Punto de entrada del motor.) Tj
+1 0 0 1 50 266 Tm () Tj
+1 0 0 1 50 252 Tm (### Cómo entra) Tj
+1 0 0 1 50 238 Tm (- importando ficha de lead desde la web) Tj
+1 0 0 1 50 224 Tm (- creando caso manualmente) Tj
+1 0 0 1 50 210 Tm () Tj
+1 0 0 1 50 196 Tm (### Datos mínimos) Tj
+1 0 0 1 50 182 Tm (- empresa) Tj
+1 0 0 1 50 168 Tm (- web) Tj
+1 0 0 1 50 154 Tm (- sector) Tj
+1 0 0 1 50 140 Tm (- origen) Tj
+1 0 0 1 50 126 Tm (- petición o necesidad) Tj
+1 0 0 1 50 112 Tm (- contacto) Tj
+1 0 0 1 50 98 Tm (- prioridad) Tj
+1 0 0 1 50 84 Tm (- notas) Tj
+1 0 0 1 50 70 Tm () Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 2083 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (### Resultado esperado) Tj
+1 0 0 1 50 728 Tm (- caso creado) Tj
+1 0 0 1 50 714 Tm (- contexto mínimo listo) Tj
+1 0 0 1 50 700 Tm (- preparado para activar análisis) Tj
+1 0 0 1 50 686 Tm () Tj
+1 0 0 1 50 672 Tm (### Acción clave) Tj
+1 0 0 1 50 658 Tm (**Botón: Crear caso**) Tj
+1 0 0 1 50 644 Tm () Tj
+1 0 0 1 50 630 Tm (### Siguiente acción automática deseada) Tj
+1 0 0 1 50 616 Tm (**Botón: Lanzar análisis**) Tj
+1 0 0 1 50 602 Tm () Tj
+1 0 0 1 50 588 Tm (---) Tj
+1 0 0 1 50 574 Tm () Tj
+1 0 0 1 50 560 Tm (## Fase 2 - Análisis del negocio) Tj
+1 0 0 1 50 546 Tm (### Qué ocurre) Tj
+1 0 0 1 50 532 Tm (Un agente analiza a fondo el negocio, no solo la petición del lead.) Tj
+1 0 0 1 50 518 Tm () Tj
+1 0 0 1 50 504 Tm (### Qué debe revisar) Tj
+1 0 0 1 50 490 Tm (- web) Tj
+1 0 0 1 50 476 Tm (- fallos UX/web) Tj
+1 0 0 1 50 462 Tm (- posicionamiento) Tj
+1 0 0 1 50 448 Tm (- redes sociales) Tj
+1 0 0 1 50 434 Tm (- oportunidades de mejora) Tj
+1 0 0 1 50 420 Tm (- posibles automatizaciones) Tj
+1 0 0 1 50 406 Tm (- puntos de dolor) Tj
+1 0 0 1 50 392 Tm (- huecos de captación) Tj
+1 0 0 1 50 378 Tm (- huecos de atención) Tj
+1 0 0 1 50 364 Tm (- huecos de seguimiento) Tj
+1 0 0 1 50 350 Tm (- qué soluciones podría necesitar aunque no las haya pedido) Tj
+1 0 0 1 50 336 Tm () Tj
+1 0 0 1 50 322 Tm (### Resultado esperado) Tj
+1 0 0 1 50 308 Tm (**Informe de análisis del negocio**) Tj
+1 0 0 1 50 294 Tm () Tj
+1 0 0 1 50 280 Tm (Debe incluir:) Tj
+1 0 0 1 50 266 Tm (- dolores) Tj
+1 0 0 1 50 252 Tm (- fallos) Tj
+1 0 0 1 50 238 Tm (- oportunidades) Tj
+1 0 0 1 50 224 Tm (- líneas de mejora) Tj
+1 0 0 1 50 210 Tm (- áreas donde AGENTSYST puede aportar valor) Tj
+1 0 0 1 50 196 Tm () Tj
+1 0 0 1 50 182 Tm (### Acción clave) Tj
+1 0 0 1 50 168 Tm (**Botón: Generar análisis**) Tj
+1 0 0 1 50 154 Tm () Tj
+1 0 0 1 50 140 Tm (### Siguiente acción automática deseada) Tj
+1 0 0 1 50 126 Tm (**Botón: Generar soluciones propuestas**) Tj
+1 0 0 1 50 112 Tm () Tj
+1 0 0 1 50 98 Tm (---) Tj
+1 0 0 1 50 84 Tm () Tj
+1 0 0 1 50 70 Tm (## Fase 3 - Soluciones propuestas) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Length 2110 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (### Qué ocurre) Tj
+1 0 0 1 50 728 Tm (A partir del análisis, otro agente estructura qué soluciones se le deberían ofrecer al) Tj
+1 0 0 1 50 714 Tm (cliente.) Tj
+1 0 0 1 50 700 Tm () Tj
+1 0 0 1 50 686 Tm (### Qué debe hacer) Tj
+1 0 0 1 50 672 Tm (- traducir análisis a soluciones) Tj
+1 0 0 1 50 658 Tm (- pensar en amplio, no estrecho) Tj
+1 0 0 1 50 644 Tm (- plantear opciones) Tj
+1 0 0 1 50 630 Tm (- combinar soluciones) Tj
+1 0 0 1 50 616 Tm (- estimar impacto) Tj
+1 0 0 1 50 602 Tm (- estimar ahorro de tiempo) Tj
+1 0 0 1 50 588 Tm (- estimar ahorro de dinero) Tj
+1 0 0 1 50 574 Tm (- priorizar por valor) Tj
+1 0 0 1 50 560 Tm () Tj
+1 0 0 1 50 546 Tm (### Resultado esperado) Tj
+1 0 0 1 50 532 Tm (**Briefing de soluciones**) Tj
+1 0 0 1 50 518 Tm () Tj
+1 0 0 1 50 504 Tm (Debe incluir:) Tj
+1 0 0 1 50 490 Tm (- opción 1) Tj
+1 0 0 1 50 476 Tm (- opción 2) Tj
+1 0 0 1 50 462 Tm (- opción 3) Tj
+1 0 0 1 50 448 Tm (- qué resuelve cada opción) Tj
+1 0 0 1 50 434 Tm (- ahorro estimado) Tj
+1 0 0 1 50 420 Tm (- valor comercial) Tj
+1 0 0 1 50 406 Tm (- prioridad sugerida) Tj
+1 0 0 1 50 392 Tm () Tj
+1 0 0 1 50 378 Tm (### Acción clave) Tj
+1 0 0 1 50 364 Tm (**Botón: Generar briefing de soluciones**) Tj
+1 0 0 1 50 350 Tm () Tj
+1 0 0 1 50 336 Tm (### Siguiente acción automática deseada) Tj
+1 0 0 1 50 322 Tm (**Botón: Crear propuesta visual**) Tj
+1 0 0 1 50 308 Tm () Tj
+1 0 0 1 50 294 Tm (---) Tj
+1 0 0 1 50 280 Tm () Tj
+1 0 0 1 50 266 Tm (## Fase 4 - Propuesta visual) Tj
+1 0 0 1 50 252 Tm (### Qué ocurre) Tj
+1 0 0 1 50 238 Tm (Se convierte la solución en un material visual presentable al cliente.) Tj
+1 0 0 1 50 224 Tm () Tj
+1 0 0 1 50 210 Tm (### Qué debe contener) Tj
+1 0 0 1 50 196 Tm (- explicación clara) Tj
+1 0 0 1 50 182 Tm (- dolores detectados) Tj
+1 0 0 1 50 168 Tm (- soluciones propuestas) Tj
+1 0 0 1 50 154 Tm (- beneficios) Tj
+1 0 0 1 50 140 Tm (- gráficos) Tj
+1 0 0 1 50 126 Tm (- tablas) Tj
+1 0 0 1 50 112 Tm (- before / after) Tj
+1 0 0 1 50 98 Tm (- ahorro operativo) Tj
+1 0 0 1 50 84 Tm (- mejora de captación) Tj
+1 0 0 1 50 70 Tm (- mejora de atención) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Length 2049 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (- mejora de eficiencia) Tj
+1 0 0 1 50 728 Tm () Tj
+1 0 0 1 50 714 Tm (### Regla comercial) Tj
+1 0 0 1 50 700 Tm (No se habla de IA como centro del mensaje.) Tj
+1 0 0 1 50 686 Tm (Se habla de:) Tj
+1 0 0 1 50 672 Tm (- soluciones automatizadas) Tj
+1 0 0 1 50 658 Tm (- eficiencia) Tj
+1 0 0 1 50 644 Tm (- ahorro) Tj
+1 0 0 1 50 630 Tm (- mejor atención) Tj
+1 0 0 1 50 616 Tm (- mejor captación) Tj
+1 0 0 1 50 602 Tm (- mejor experiencia de cliente) Tj
+1 0 0 1 50 588 Tm () Tj
+1 0 0 1 50 574 Tm (### Resultado esperado) Tj
+1 0 0 1 50 560 Tm (**Documento visual descargable para cliente**) Tj
+1 0 0 1 50 546 Tm () Tj
+1 0 0 1 50 532 Tm (### Acción clave) Tj
+1 0 0 1 50 518 Tm (**Botón: Generar propuesta visual**) Tj
+1 0 0 1 50 504 Tm () Tj
+1 0 0 1 50 490 Tm (### Siguiente acción automática deseada) Tj
+1 0 0 1 50 476 Tm (**Botón: Preparar demo**) Tj
+1 0 0 1 50 462 Tm () Tj
+1 0 0 1 50 448 Tm (---) Tj
+1 0 0 1 50 434 Tm () Tj
+1 0 0 1 50 420 Tm (## Fase 5 - Demo preparada) Tj
+1 0 0 1 50 406 Tm (### Qué ocurre) Tj
+1 0 0 1 50 392 Tm (Se crea algo visible que el cliente pueda ver funcionando.) Tj
+1 0 0 1 50 378 Tm () Tj
+1 0 0 1 50 364 Tm (### Puede incluir) Tj
+1 0 0 1 50 350 Tm (- landing demo) Tj
+1 0 0 1 50 336 Tm (- flujo demo) Tj
+1 0 0 1 50 322 Tm (- formulario demo) Tj
+1 0 0 1 50 308 Tm (- WhatsApp demo) Tj
+1 0 0 1 50 294 Tm (- email demo) Tj
+1 0 0 1 50 280 Tm (- experiencia funcional básica) Tj
+1 0 0 1 50 266 Tm () Tj
+1 0 0 1 50 252 Tm (### Canales demo ya definidos) Tj
+1 0 0 1 50 238 Tm (- WhatsApp demo: `+1 289 652 0531`) Tj
+1 0 0 1 50 224 Tm (- Email demo: `agentsystdemo@gmail.com`) Tj
+1 0 0 1 50 210 Tm () Tj
+1 0 0 1 50 196 Tm (### Resultado esperado) Tj
+1 0 0 1 50 182 Tm (**Demo funcional presentable**) Tj
+1 0 0 1 50 168 Tm () Tj
+1 0 0 1 50 154 Tm (### Acción clave) Tj
+1 0 0 1 50 140 Tm (**Botón: Crear demo**) Tj
+1 0 0 1 50 126 Tm () Tj
+1 0 0 1 50 112 Tm (### Siguiente acción automática deseada) Tj
+1 0 0 1 50 98 Tm (**Botón: Pasar a cierre**) Tj
+1 0 0 1 50 84 Tm () Tj
+1 0 0 1 50 70 Tm (---) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Length 2053 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm () Tj
+1 0 0 1 50 728 Tm (## Fase 6 - Cierre) Tj
+1 0 0 1 50 714 Tm (### Qué ocurre) Tj
+1 0 0 1 50 700 Tm (Se consolida el interés, se aterriza el alcance y se prepara la implantación real.) Tj
+1 0 0 1 50 686 Tm () Tj
+1 0 0 1 50 672 Tm (### Qué debe pasar) Tj
+1 0 0 1 50 658 Tm (- recoger feedback del cliente) Tj
+1 0 0 1 50 644 Tm (- decidir qué opción compra) Tj
+1 0 0 1 50 630 Tm (- cerrar alcance) Tj
+1 0 0 1 50 616 Tm (- definir fases reales de implementación) Tj
+1 0 0 1 50 602 Tm (- fijar entregables) Tj
+1 0 0 1 50 588 Tm () Tj
+1 0 0 1 50 574 Tm (### Resultado esperado) Tj
+1 0 0 1 50 560 Tm (**Briefing final aprobado**) Tj
+1 0 0 1 50 546 Tm () Tj
+1 0 0 1 50 532 Tm (### Acción clave) Tj
+1 0 0 1 50 518 Tm (**Botón: Cerrar solución**) Tj
+1 0 0 1 50 504 Tm () Tj
+1 0 0 1 50 490 Tm (### Siguiente acción automática deseada) Tj
+1 0 0 1 50 476 Tm (**Botón: Pasar a implementación**) Tj
+1 0 0 1 50 462 Tm () Tj
+1 0 0 1 50 448 Tm (---) Tj
+1 0 0 1 50 434 Tm () Tj
+1 0 0 1 50 420 Tm (## Fase 7 - Implementación) Tj
+1 0 0 1 50 406 Tm (### Qué ocurre) Tj
+1 0 0 1 50 392 Tm (Se ejecuta la solución real ya aprobada.) Tj
+1 0 0 1 50 378 Tm () Tj
+1 0 0 1 50 364 Tm (### Puede incluir) Tj
+1 0 0 1 50 350 Tm (- agentes finales del cliente) Tj
+1 0 0 1 50 336 Tm (- integraciones) Tj
+1 0 0 1 50 322 Tm (- automatizaciones) Tj
+1 0 0 1 50 308 Tm (- frontend real) Tj
+1 0 0 1 50 294 Tm (- backend real) Tj
+1 0 0 1 50 280 Tm (- despliegue) Tj
+1 0 0 1 50 266 Tm (- operación real) Tj
+1 0 0 1 50 252 Tm () Tj
+1 0 0 1 50 238 Tm (### Resultado esperado) Tj
+1 0 0 1 50 224 Tm (**Sistema implementado para cliente**) Tj
+1 0 0 1 50 210 Tm () Tj
+1 0 0 1 50 196 Tm (### Acción clave) Tj
+1 0 0 1 50 182 Tm (**Botón: Lanzar implementación**) Tj
+1 0 0 1 50 168 Tm () Tj
+1 0 0 1 50 154 Tm (---) Tj
+1 0 0 1 50 140 Tm () Tj
+1 0 0 1 50 126 Tm (## 6. Agentes que vamos a necesitar) Tj
+1 0 0 1 50 112 Tm () Tj
+1 0 0 1 50 98 Tm (## 6.1 Agente analista de negocio) Tj
+1 0 0 1 50 84 Tm (### Fase) Tj
+1 0 0 1 50 70 Tm (Nuevo caso / Análisis del negocio) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Length 1886 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm () Tj
+1 0 0 1 50 728 Tm (### Función) Tj
+1 0 0 1 50 714 Tm (Analizar el negocio en profundidad y detectar oportunidades reales.) Tj
+1 0 0 1 50 700 Tm () Tj
+1 0 0 1 50 686 Tm (### Input) Tj
+1 0 0 1 50 672 Tm (- ficha del caso) Tj
+1 0 0 1 50 658 Tm (- web) Tj
+1 0 0 1 50 644 Tm (- sector) Tj
+1 0 0 1 50 630 Tm (- petición) Tj
+1 0 0 1 50 616 Tm (- contexto inicial) Tj
+1 0 0 1 50 602 Tm () Tj
+1 0 0 1 50 588 Tm (### Output) Tj
+1 0 0 1 50 574 Tm (- informe de análisis del negocio) Tj
+1 0 0 1 50 560 Tm () Tj
+1 0 0 1 50 546 Tm (### Entrega a) Tj
+1 0 0 1 50 532 Tm (Agente orquestador de soluciones) Tj
+1 0 0 1 50 518 Tm () Tj
+1 0 0 1 50 504 Tm (### Botón que lo activa) Tj
+1 0 0 1 50 490 Tm (**Lanzar análisis**) Tj
+1 0 0 1 50 476 Tm () Tj
+1 0 0 1 50 462 Tm (---) Tj
+1 0 0 1 50 448 Tm () Tj
+1 0 0 1 50 434 Tm (## 6.2 Agente orquestador de soluciones) Tj
+1 0 0 1 50 420 Tm (### Fase) Tj
+1 0 0 1 50 406 Tm (Soluciones propuestas) Tj
+1 0 0 1 50 392 Tm () Tj
+1 0 0 1 50 378 Tm (### Función) Tj
+1 0 0 1 50 364 Tm (Traducir el análisis en soluciones concretas, opciones y valor comercial.) Tj
+1 0 0 1 50 350 Tm () Tj
+1 0 0 1 50 336 Tm (### Input) Tj
+1 0 0 1 50 322 Tm (- informe de análisis) Tj
+1 0 0 1 50 308 Tm () Tj
+1 0 0 1 50 294 Tm (### Output) Tj
+1 0 0 1 50 280 Tm (- briefing de soluciones) Tj
+1 0 0 1 50 266 Tm (- escenarios de propuesta) Tj
+1 0 0 1 50 252 Tm (- ahorro estimado) Tj
+1 0 0 1 50 238 Tm () Tj
+1 0 0 1 50 224 Tm (### Entrega a) Tj
+1 0 0 1 50 210 Tm (Agente diseñador de propuestas) Tj
+1 0 0 1 50 196 Tm () Tj
+1 0 0 1 50 182 Tm (### Botón que lo activa) Tj
+1 0 0 1 50 168 Tm (**Generar soluciones propuestas**) Tj
+1 0 0 1 50 154 Tm () Tj
+1 0 0 1 50 140 Tm (---) Tj
+1 0 0 1 50 126 Tm () Tj
+1 0 0 1 50 112 Tm (## 6.3 Agente diseñador de propuestas) Tj
+1 0 0 1 50 98 Tm (### Fase) Tj
+1 0 0 1 50 84 Tm (Propuesta visual) Tj
+1 0 0 1 50 70 Tm () Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Length 1892 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (### Función) Tj
+1 0 0 1 50 728 Tm (Convertir el briefing en un material visual, elegante y entendible para cliente.) Tj
+1 0 0 1 50 714 Tm () Tj
+1 0 0 1 50 700 Tm (### Input) Tj
+1 0 0 1 50 686 Tm (- briefing de soluciones) Tj
+1 0 0 1 50 672 Tm () Tj
+1 0 0 1 50 658 Tm (### Output) Tj
+1 0 0 1 50 644 Tm (- propuesta visual descargable) Tj
+1 0 0 1 50 630 Tm () Tj
+1 0 0 1 50 616 Tm (### Entrega a) Tj
+1 0 0 1 50 602 Tm (Agente creador de demo / landing) Tj
+1 0 0 1 50 588 Tm () Tj
+1 0 0 1 50 574 Tm (### Botón que lo activa) Tj
+1 0 0 1 50 560 Tm (**Crear propuesta visual**) Tj
+1 0 0 1 50 546 Tm () Tj
+1 0 0 1 50 532 Tm (---) Tj
+1 0 0 1 50 518 Tm () Tj
+1 0 0 1 50 504 Tm (## 6.4 Agente creador de demo / landing) Tj
+1 0 0 1 50 490 Tm (### Fase) Tj
+1 0 0 1 50 476 Tm (Demo preparada) Tj
+1 0 0 1 50 462 Tm () Tj
+1 0 0 1 50 448 Tm (### Función) Tj
+1 0 0 1 50 434 Tm (Construir una demo visible que capte atención y ayude al cierre.) Tj
+1 0 0 1 50 420 Tm () Tj
+1 0 0 1 50 406 Tm (### Input) Tj
+1 0 0 1 50 392 Tm (- propuesta visual) Tj
+1 0 0 1 50 378 Tm (- solución elegida) Tj
+1 0 0 1 50 364 Tm (- canales demo) Tj
+1 0 0 1 50 350 Tm () Tj
+1 0 0 1 50 336 Tm (### Output) Tj
+1 0 0 1 50 322 Tm (- landing demo) Tj
+1 0 0 1 50 308 Tm (- flujo demo) Tj
+1 0 0 1 50 294 Tm (- activos demo) Tj
+1 0 0 1 50 280 Tm () Tj
+1 0 0 1 50 266 Tm (### Entrega a) Tj
+1 0 0 1 50 252 Tm (Agente de cierre de solución) Tj
+1 0 0 1 50 238 Tm () Tj
+1 0 0 1 50 224 Tm (### Botón que lo activa) Tj
+1 0 0 1 50 210 Tm (**Preparar demo**) Tj
+1 0 0 1 50 196 Tm () Tj
+1 0 0 1 50 182 Tm (---) Tj
+1 0 0 1 50 168 Tm () Tj
+1 0 0 1 50 154 Tm (## 6.5 Agente de cierre de solución) Tj
+1 0 0 1 50 140 Tm (### Fase) Tj
+1 0 0 1 50 126 Tm (Cierre) Tj
+1 0 0 1 50 112 Tm () Tj
+1 0 0 1 50 98 Tm (### Función) Tj
+1 0 0 1 50 84 Tm (Convertir la propuesta aprobada en alcance definitivo.) Tj
+1 0 0 1 50 70 Tm () Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Length 1889 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (### Input) Tj
+1 0 0 1 50 728 Tm (- feedback cliente) Tj
+1 0 0 1 50 714 Tm (- demo presentada) Tj
+1 0 0 1 50 700 Tm (- opción elegida) Tj
+1 0 0 1 50 686 Tm () Tj
+1 0 0 1 50 672 Tm (### Output) Tj
+1 0 0 1 50 658 Tm (- briefing final aprobado) Tj
+1 0 0 1 50 644 Tm (- alcance definitivo) Tj
+1 0 0 1 50 630 Tm () Tj
+1 0 0 1 50 616 Tm (### Entrega a) Tj
+1 0 0 1 50 602 Tm (Agente de producción técnica) Tj
+1 0 0 1 50 588 Tm () Tj
+1 0 0 1 50 574 Tm (### Botón que lo activa) Tj
+1 0 0 1 50 560 Tm (**Cerrar solución**) Tj
+1 0 0 1 50 546 Tm () Tj
+1 0 0 1 50 532 Tm (---) Tj
+1 0 0 1 50 518 Tm () Tj
+1 0 0 1 50 504 Tm (## 6.6 Agente de producción técnica) Tj
+1 0 0 1 50 490 Tm (### Fase) Tj
+1 0 0 1 50 476 Tm (Implementación) Tj
+1 0 0 1 50 462 Tm () Tj
+1 0 0 1 50 448 Tm (### Función) Tj
+1 0 0 1 50 434 Tm (Ejecutar la solución real aprobada.) Tj
+1 0 0 1 50 420 Tm () Tj
+1 0 0 1 50 406 Tm (### Input) Tj
+1 0 0 1 50 392 Tm (- briefing final) Tj
+1 0 0 1 50 378 Tm (- alcance) Tj
+1 0 0 1 50 364 Tm (- entregables) Tj
+1 0 0 1 50 350 Tm () Tj
+1 0 0 1 50 336 Tm (### Output) Tj
+1 0 0 1 50 322 Tm (- sistema implementado) Tj
+1 0 0 1 50 308 Tm () Tj
+1 0 0 1 50 294 Tm (### Entrega a) Tj
+1 0 0 1 50 280 Tm (producción/operación final del cliente) Tj
+1 0 0 1 50 266 Tm () Tj
+1 0 0 1 50 252 Tm (### Botón que lo activa) Tj
+1 0 0 1 50 238 Tm (**Lanzar implementación**) Tj
+1 0 0 1 50 224 Tm () Tj
+1 0 0 1 50 210 Tm (---) Tj
+1 0 0 1 50 196 Tm () Tj
+1 0 0 1 50 182 Tm (## 7. Cómo deben ir conectados entre sí) Tj
+1 0 0 1 50 168 Tm (La conexión correcta del motor debe ser lineal y accionable.) Tj
+1 0 0 1 50 154 Tm () Tj
+1 0 0 1 50 140 Tm (### Secuencia) Tj
+1 0 0 1 50 126 Tm (1. Crear caso) Tj
+1 0 0 1 50 112 Tm (2. Lanzar análisis) Tj
+1 0 0 1 50 98 Tm (3. Generar soluciones propuestas) Tj
+1 0 0 1 50 84 Tm (4. Crear propuesta visual) Tj
+1 0 0 1 50 70 Tm (5. Preparar demo) Tj
+ET
+endstream
+endobj
+12 0 obj
+<< /Length 2261 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (6. Cerrar solución) Tj
+1 0 0 1 50 728 Tm (7. Lanzar implementación) Tj
+1 0 0 1 50 714 Tm () Tj
+1 0 0 1 50 700 Tm (Cada fase debe tener:) Tj
+1 0 0 1 50 686 Tm (- un agente owner) Tj
+1 0 0 1 50 672 Tm (- un input claro) Tj
+1 0 0 1 50 658 Tm (- un output claro) Tj
+1 0 0 1 50 644 Tm (- un botón principal de acción) Tj
+1 0 0 1 50 630 Tm (- una salida al siguiente agente) Tj
+1 0 0 1 50 616 Tm () Tj
+1 0 0 1 50 602 Tm (---) Tj
+1 0 0 1 50 588 Tm () Tj
+1 0 0 1 50 574 Tm (## 8. Automatización deseada con un click) Tj
+1 0 0 1 50 560 Tm (La experiencia ideal del panel es esta:) Tj
+1 0 0 1 50 546 Tm () Tj
+1 0 0 1 50 532 Tm (### En cada caso) Tj
+1 0 0 1 50 518 Tm (Val abre la ficha y ve:) Tj
+1 0 0 1 50 504 Tm (- fase actual) Tj
+1 0 0 1 50 490 Tm (- agente responsable) Tj
+1 0 0 1 50 476 Tm (- output pendiente) Tj
+1 0 0 1 50 462 Tm (- botón principal) Tj
+1 0 0 1 50 448 Tm () Tj
+1 0 0 1 50 434 Tm (### Al pulsar el botón) Tj
+1 0 0 1 50 420 Tm (El sistema debe:) Tj
+1 0 0 1 50 406 Tm (1. lanzar el agente correcto) Tj
+1 0 0 1 50 392 Tm (2. generar el output) Tj
+1 0 0 1 50 378 Tm (3. adjuntar el resultado al caso) Tj
+1 0 0 1 50 364 Tm (4. actualizar el historial) Tj
+1 0 0 1 50 350 Tm (5. marcar la fase como completada o en curso) Tj
+1 0 0 1 50 336 Tm (6. habilitar la siguiente acción) Tj
+1 0 0 1 50 322 Tm () Tj
+1 0 0 1 50 308 Tm (Esto convierte el panel en una herramienta operativa real y no en un simple tablero visual.) Tj
+1 0 0 1 50 294 Tm () Tj
+1 0 0 1 50 280 Tm (---) Tj
+1 0 0 1 50 266 Tm () Tj
+1 0 0 1 50 252 Tm (## 9. Qué falta por implementar) Tj
+1 0 0 1 50 238 Tm () Tj
+1 0 0 1 50 224 Tm (## Parte producto / sistema) Tj
+1 0 0 1 50 210 Tm (- validar el contenido exacto de cada output) Tj
+1 0 0 1 50 196 Tm (- decidir qué campos son obligatorios por fase) Tj
+1 0 0 1 50 182 Tm (- definir la estructura exacta de cada informe descargable) Tj
+1 0 0 1 50 168 Tm (- definir si una fase puede volver atrás o no) Tj
+1 0 0 1 50 154 Tm () Tj
+1 0 0 1 50 140 Tm (## Parte agentes) Tj
+1 0 0 1 50 126 Tm (- crear cada agente de verdad) Tj
+1 0 0 1 50 112 Tm (- definir su prompt / misión / límites) Tj
+1 0 0 1 50 98 Tm (- definir su output exacto) Tj
+1 0 0 1 50 84 Tm (- definir el conector con el panel) Tj
+1 0 0 1 50 70 Tm () Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Length 2067 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (## Parte técnica) Tj
+1 0 0 1 50 728 Tm (- persistencia real) Tj
+1 0 0 1 50 714 Tm (- importación real desde leads) Tj
+1 0 0 1 50 700 Tm (- generación real de documentos) Tj
+1 0 0 1 50 686 Tm (- guardado de outputs) Tj
+1 0 0 1 50 672 Tm (- trazabilidad) Tj
+1 0 0 1 50 658 Tm (- transición automática entre fases) Tj
+1 0 0 1 50 644 Tm (- botones de acción reales) Tj
+1 0 0 1 50 630 Tm () Tj
+1 0 0 1 50 616 Tm (## Parte visual) Tj
+1 0 0 1 50 602 Tm (- identidad visual AGENTSYST bien aplicada) Tj
+1 0 0 1 50 588 Tm (- look premium) Tj
+1 0 0 1 50 574 Tm (- menos dashboard genérico) Tj
+1 0 0 1 50 560 Tm (- mejor claridad de lectura) Tj
+1 0 0 1 50 546 Tm () Tj
+1 0 0 1 50 532 Tm (---) Tj
+1 0 0 1 50 518 Tm () Tj
+1 0 0 1 50 504 Tm (## 10. Qué debe ser este panel cuando esté bien hecho) Tj
+1 0 0 1 50 490 Tm (Debe ser:) Tj
+1 0 0 1 50 476 Tm (- rápido) Tj
+1 0 0 1 50 462 Tm (- claro) Tj
+1 0 0 1 50 448 Tm (- accionable) Tj
+1 0 0 1 50 434 Tm (- profesional) Tj
+1 0 0 1 50 420 Tm (- escalable) Tj
+1 0 0 1 50 406 Tm (- sin ruido) Tj
+1 0 0 1 50 392 Tm (- sin pasos ambiguos) Tj
+1 0 0 1 50 378 Tm (- con lenguaje de negocio) Tj
+1 0 0 1 50 364 Tm (- con automatización progresiva real) Tj
+1 0 0 1 50 350 Tm () Tj
+1 0 0 1 50 336 Tm (Debe permitir que AGENTSYST funcione como una máquina:) Tj
+1 0 0 1 50 322 Tm (- entra oportunidad) Tj
+1 0 0 1 50 308 Tm (- se analiza) Tj
+1 0 0 1 50 294 Tm (- se convierte en valor) Tj
+1 0 0 1 50 280 Tm (- se presenta) Tj
+1 0 0 1 50 266 Tm (- se cierra) Tj
+1 0 0 1 50 252 Tm (- se implementa) Tj
+1 0 0 1 50 238 Tm () Tj
+1 0 0 1 50 224 Tm (---) Tj
+1 0 0 1 50 210 Tm () Tj
+1 0 0 1 50 196 Tm (## 11. Resumen ejecutivo final) Tj
+1 0 0 1 50 182 Tm (### Ya implementado) Tj
+1 0 0 1 50 168 Tm (- repo y base del panel) Tj
+1 0 0 1 50 154 Tm (- V1 navegable) Tj
+1 0 0 1 50 140 Tm (- entrada por Nuevo caso como enfoque) Tj
+1 0 0 1 50 126 Tm (- esqueleto general del motor) Tj
+1 0 0 1 50 112 Tm () Tj
+1 0 0 1 50 98 Tm (### Falta implementar) Tj
+1 0 0 1 50 84 Tm (- agentes reales) Tj
+1 0 0 1 50 70 Tm (- outputs reales) Tj
+ET
+endstream
+endobj
+14 0 obj
+<< /Length 591 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 50 742 Tm (- botones de acción reales) Tj
+1 0 0 1 50 728 Tm (- persistencia) Tj
+1 0 0 1 50 714 Tm (- importación real) Tj
+1 0 0 1 50 700 Tm (- documentos reales) Tj
+1 0 0 1 50 686 Tm (- automatización del paso al siguiente agente) Tj
+1 0 0 1 50 672 Tm () Tj
+1 0 0 1 50 658 Tm (### Prioridad inmediata) Tj
+1 0 0 1 50 644 Tm (1. crear agentes obreros uno por uno) Tj
+1 0 0 1 50 630 Tm (2. definir su función exacta) Tj
+1 0 0 1 50 616 Tm (3. conectarlos a los botones por fase) Tj
+1 0 0 1 50 602 Tm (4. hacer que el panel pase de maqueta navegable a motor ejecutable) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+16 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+17 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+18 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+19 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+20 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+21 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
+endobj
+22 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
+endobj
+23 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
+endobj
+24 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 20 0 R >>
+endobj
+25 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 22 0 R >>
+endobj
+26 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 24 0 R >>
+endobj
+27 0 obj
+<< /Type /Page /Parent 28 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 26 0 R >>
+endobj
+28 0 obj
+<< /Type /Pages /Kids [ 3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R ] /Count 13 >>
+endobj
+29 0 obj
+<< /Type /Catalog /Pages 28 0 R >>
+endobj
+xref
+0 30
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000002638 00000 n 
+0000005077 00000 n 
+0000007331 00000 n 
+0000009466 00000 n 
+0000011628 00000 n 
+0000013729 00000 n 
+0000015834 00000 n 
+0000017772 00000 n 
+0000019717 00000 n 
+0000021659 00000 n 
+0000023973 00000 n 
+0000026093 00000 n 
+0000026736 00000 n 
+0000026864 00000 n 
+0000026992 00000 n 
+0000027120 00000 n 
+0000027248 00000 n 
+0000027377 00000 n 
+0000027506 00000 n 
+0000027635 00000 n 
+0000027764 00000 n 
+0000027893 00000 n 
+0000028022 00000 n 
+0000028151 00000 n 
+0000028280 00000 n 
+0000028409 00000 n 
+0000028551 00000 n 
+trailer
+<< /Size 30 /Root 29 0 R >>
+startxref
+28602
+%%EOF
