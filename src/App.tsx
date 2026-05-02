@@ -23,6 +23,27 @@ function App() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>(agents[0]?.id ?? '')
   const [selectedDeliveryCaseId, setSelectedDeliveryCaseId] = useState<string>(deliveryQueue[0]?.caseId ?? '')
 
+  const jumpToCase = (caseId: string) => {
+    setSelectedCaseId(caseId)
+    setActiveView('casos')
+  }
+
+  const jumpToAgentByName = (agentName: string) => {
+    const agent = agents.find((item) => item.name === agentName)
+    if (agent) {
+      setSelectedAgentId(agent.id)
+      setActiveView('agentes')
+    }
+  }
+
+  const jumpToDelivery = (caseId: string) => {
+    const delivery = deliveryQueue.find((item) => item.caseId === caseId)
+    if (delivery) {
+      setSelectedDeliveryCaseId(caseId)
+      setActiveView('entrega')
+    }
+  }
+
   const currentLabel = useMemo(
     () => navigation.find((item) => item.key === activeView)?.label ?? 'Resumen',
     [activeView],
@@ -93,6 +114,8 @@ function App() {
               <CasesView
                 selectedCase={selectedCase}
                 onSelectCase={setSelectedCaseId}
+                onJumpToAgent={jumpToAgentByName}
+                onJumpToDelivery={jumpToDelivery}
               />
             )}
             {activeView === 'diagnostico' && <DiagnosisView />}
@@ -103,6 +126,8 @@ function App() {
               <DeliveryView
                 selectedDelivery={selectedDelivery}
                 onSelectDelivery={setSelectedDeliveryCaseId}
+                onJumpToCase={jumpToCase}
+                onJumpToAgent={jumpToAgentByName}
               />
             )}
             {activeView === 'biblioteca' && <LibraryView />}
@@ -110,6 +135,7 @@ function App() {
               <AgentsView
                 selectedAgent={selectedAgent}
                 onSelectAgent={setSelectedAgentId}
+                onJumpToCase={jumpToCase}
               />
             )}
           </div>
@@ -194,9 +220,13 @@ function SummaryView() {
 function CasesView({
   selectedCase,
   onSelectCase,
+  onJumpToAgent,
+  onJumpToDelivery,
 }: {
   selectedCase?: CaseItem
   onSelectCase: (caseId: string) => void
+  onJumpToAgent: (agentName: string) => void
+  onJumpToDelivery: (caseId: string) => void
 }) {
   return (
     <div className="stack-lg">
@@ -220,7 +250,7 @@ function CasesView({
         options={cases.map((item) => ({ value: item.id, label: `${item.id} · ${item.company}` }))}
         onChange={onSelectCase}
       />
-      {selectedCase && <CaseDetailCard item={selectedCase} />}
+      {selectedCase && <CaseDetailCard item={selectedCase} onJumpToAgent={onJumpToAgent} onJumpToDelivery={onJumpToDelivery} />}
     </div>
   )
 }
@@ -268,9 +298,13 @@ function ValidationView() {
 function DeliveryView({
   selectedDelivery,
   onSelectDelivery,
+  onJumpToCase,
+  onJumpToAgent,
 }: {
   selectedDelivery?: DeliveryItem
   onSelectDelivery: (caseId: string) => void
+  onJumpToCase: (caseId: string) => void
+  onJumpToAgent: (agentName: string) => void
 }) {
   return (
     <div className="stack-lg">
@@ -285,7 +319,7 @@ function DeliveryView({
         options={deliveryQueue.map((item) => ({ value: item.caseId, label: `${item.caseId} · ${item.company}` }))}
         onChange={onSelectDelivery}
       />
-      {selectedDelivery && <DeliveryDetailCard item={selectedDelivery} />}
+      {selectedDelivery && <DeliveryDetailCard item={selectedDelivery} onJumpToCase={onJumpToCase} onJumpToAgent={onJumpToAgent} />}
     </div>
   )
 }
@@ -303,9 +337,11 @@ function LibraryView() {
 function AgentsView({
   selectedAgent,
   onSelectAgent,
+  onJumpToCase,
 }: {
   selectedAgent?: AgentItem
   onSelectAgent: (agentId: string) => void
+  onJumpToCase: (caseId: string) => void
 }) {
   return (
     <div className="stack-lg">
@@ -320,7 +356,7 @@ function AgentsView({
         options={agents.map((item) => ({ value: item.id, label: item.name }))}
         onChange={onSelectAgent}
       />
-      {selectedAgent && <AgentDetailCard item={selectedAgent} />}
+      {selectedAgent && <AgentDetailCard item={selectedAgent} onJumpToCase={onJumpToCase} />}
     </div>
   )
 }
@@ -390,7 +426,17 @@ function DetailSelector({
   )
 }
 
-function CaseDetailCard({ item }: { item: CaseItem }) {
+function CaseDetailCard({
+  item,
+  onJumpToAgent,
+  onJumpToDelivery,
+}: {
+  item: CaseItem
+  onJumpToAgent: (agentName: string) => void
+  onJumpToDelivery: (caseId: string) => void
+}) {
+  const hasDelivery = deliveryQueue.some((delivery) => delivery.caseId === item.id)
+
   return (
     <section className="panel-card stack-md">
       <div className="panel-head">
@@ -402,6 +448,11 @@ function CaseDetailCard({ item }: { item: CaseItem }) {
           <PriorityBadge priority={item.priority} />
           <StatusBadge kind={item.status} />
         </div>
+      </div>
+      <div className="action-row">
+        <button className="secondary-btn" onClick={() => onJumpToAgent(item.currentAgent)}>Ver agente actual</button>
+        <button className="secondary-btn" onClick={() => onJumpToAgent(item.nextAgent)}>Ver siguiente agente</button>
+        <button className="secondary-btn" onClick={() => hasDelivery && onJumpToDelivery(item.id)} disabled={!hasDelivery}>Ver entrega</button>
       </div>
       <div className="detail-grid">
         <DetailBlock title="Cabecera" items={[
@@ -445,7 +496,10 @@ function CaseDetailCard({ item }: { item: CaseItem }) {
   )
 }
 
-function AgentDetailCard({ item }: { item: AgentItem }) {
+function AgentDetailCard({ item, onJumpToCase }: { item: AgentItem; onJumpToCase: (caseId: string) => void }) {
+  const activeCases = cases.filter((caseItem) => caseItem.currentAgent === item.name)
+  const waitingCases = cases.filter((caseItem) => caseItem.nextAgent === item.name)
+
   return (
     <section className="panel-card stack-md">
       <div className="panel-head">
@@ -472,16 +526,28 @@ function AgentDetailCard({ item }: { item: AgentItem }) {
           ['Bloqueos típicos', 'Input incompleto / dependencia pendiente / validación faltante'],
         ]} />
         <DetailBlock title="Carga" items={[
-          ['Casos activos', `${cases.filter((caseItem) => caseItem.currentAgent === item.name).length}`],
-          ['Casos en espera', `${cases.filter((caseItem) => caseItem.nextAgent === item.name).length}`],
+          ['Casos activos', `${activeCases.length}`],
+          ['Casos en espera', `${waitingCases.length}`],
           ['Completados', 'N/D en esta V1'],
         ]} />
       </div>
+      <LinkedCasesCard title="Casos activos del agente" casesList={activeCases} onJumpToCase={onJumpToCase} emptyLabel="No tiene casos activos ahora." />
+      <LinkedCasesCard title="Casos esperando este agente" casesList={waitingCases} onJumpToCase={onJumpToCase} emptyLabel="Ningún caso está en cola para este agente." />
     </section>
   )
 }
 
-function DeliveryDetailCard({ item }: { item: DeliveryItem }) {
+function DeliveryDetailCard({
+  item,
+  onJumpToCase,
+  onJumpToAgent,
+}: {
+  item: DeliveryItem
+  onJumpToCase: (caseId: string) => void
+  onJumpToAgent: (agentName: string) => void
+}) {
+  const linkedCase = cases.find((caseItem) => caseItem.id === item.caseId)
+
   return (
     <section className="panel-card stack-md">
       <div className="panel-head">
@@ -490,6 +556,10 @@ function DeliveryDetailCard({ item }: { item: DeliveryItem }) {
           <h3>{item.caseId} · {item.company}</h3>
         </div>
         <StatusBadge kind={item.demoStatus} />
+      </div>
+      <div className="action-row">
+        <button className="secondary-btn" onClick={() => onJumpToCase(item.caseId)}>Ver caso</button>
+        <button className="secondary-btn" onClick={() => linkedCase && onJumpToAgent(linkedCase.currentAgent)} disabled={!linkedCase}>Ver agente actual</button>
       </div>
       <div className="detail-grid detail-grid-two">
         <DetailBlock title="Cabecera" items={[
@@ -516,6 +586,39 @@ function DeliveryDetailCard({ item }: { item: DeliveryItem }) {
         ]} />
       </div>
       <ReadinessCard items={item.readiness} />
+    </section>
+  )
+}
+
+function LinkedCasesCard({
+  title,
+  casesList,
+  onJumpToCase,
+  emptyLabel,
+}: {
+  title: string
+  casesList: CaseItem[]
+  onJumpToCase: (caseId: string) => void
+  emptyLabel: string
+}) {
+  return (
+    <section className="panel-card stack-md">
+      <div className="panel-head">
+        <div>
+          <p className="eyebrow">Relación</p>
+          <h3>{title}</h3>
+        </div>
+      </div>
+      <div className="linked-list">
+        {casesList.length === 0 && <p className="muted">{emptyLabel}</p>}
+        {casesList.map((caseItem) => (
+          <button key={caseItem.id} className="linked-item" onClick={() => onJumpToCase(caseItem.id)}>
+            <strong>{caseItem.id}</strong>
+            <span>{caseItem.company}</span>
+            <small>{caseItem.currentPhase}</small>
+          </button>
+        ))}
+      </div>
     </section>
   )
 }
