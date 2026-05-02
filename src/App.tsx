@@ -1,80 +1,99 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import './App.css'
-import {
-  agents,
-  architectureQueue,
-  cases,
-  deliveryQueue,
-  diagnosisQueue,
-  kpis,
-  libraryAssets,
-  navigation,
-  phaseOutputs,
-  productionQueue,
-  timeline,
-  validationQueue,
-} from './data'
-import type { AgentItem, CaseItem, DeliveryItem, NavigationKey } from './types'
+import { agents, navigation, phases } from './data'
+import type { CaseItem, CasePhase, NavigationKey, Priority } from './types'
 
-const phaseOrder = ['Intake', 'Diagnóstico', 'Arquitectura', 'Diseño', 'Producción', 'Validación', 'Demo / Entrega'] as const
+type DraftCase = {
+  company: string
+  website: string
+  sector: string
+  origin: string
+  request: string
+  priority: Priority
+  notes: string
+}
+
+const initialDraft: DraftCase = {
+  company: '',
+  website: '',
+  sector: '',
+  origin: 'Creación manual desde panel',
+  request: '',
+  priority: 'Media',
+  notes: '',
+}
 
 function App() {
-  const [activeView, setActiveView] = useState<NavigationKey>('resumen')
-  const [selectedCaseId, setSelectedCaseId] = useState<string>(cases[0]?.id ?? '')
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(agents[0]?.id ?? '')
-  const [selectedDeliveryCaseId, setSelectedDeliveryCaseId] = useState<string>(deliveryQueue[0]?.caseId ?? '')
+  const [activeView, setActiveView] = useState<NavigationKey>('panel')
+  const [cases, setCases] = useState<CaseItem[]>([])
+  const [selectedCaseId, setSelectedCaseId] = useState('')
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [draft, setDraft] = useState<DraftCase>(initialDraft)
+  const [search, setSearch] = useState('')
 
-  const jumpToCase = (caseId: string) => {
-    setSelectedCaseId(caseId)
-    setActiveView('casos')
-  }
-
-  const jumpToAgentByName = (agentName: string) => {
-    const agent = agents.find((item) => item.name === agentName)
-    if (agent) {
-      setSelectedAgentId(agent.id)
-      setActiveView('agentes')
-    }
-  }
-
-  const jumpToDelivery = (caseId: string) => {
-    const delivery = deliveryQueue.find((item) => item.caseId === caseId)
-    if (delivery) {
-      setSelectedDeliveryCaseId(caseId)
-      setActiveView('entrega')
-    }
-  }
-
-  const currentLabel = useMemo(
-    () => navigation.find((item) => item.key === activeView)?.label ?? 'Resumen',
-    [activeView],
-  )
+  const filteredCases = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) return cases
+    return cases.filter((item) =>
+      [item.id, item.company, item.sector, item.origin, item.currentPhase].join(' ').toLowerCase().includes(term),
+    )
+  }, [cases, search])
 
   const selectedCase = useMemo(
-    () => cases.find((item) => item.id === selectedCaseId) ?? cases[0],
-    [selectedCaseId],
+    () => filteredCases.find((item) => item.id === selectedCaseId) ?? cases.find((item) => item.id === selectedCaseId),
+    [cases, filteredCases, selectedCaseId],
   )
 
-  const selectedAgent = useMemo(
-    () => agents.find((item) => item.id === selectedAgentId) ?? agents[0],
-    [selectedAgentId],
+  const phaseCounts = useMemo(
+    () => phases.map((phase) => ({ ...phase, count: cases.filter((item) => item.currentPhase === phase.phase).length })),
+    [cases],
   )
 
-  const selectedDelivery = useMemo(
-    () => deliveryQueue.find((item) => item.caseId === selectedDeliveryCaseId) ?? deliveryQueue[0],
-    [selectedDeliveryCaseId],
-  )
+  const currentCasesLabel = `${cases.length} caso${cases.length === 1 ? '' : 's'} en el motor`
+
+  const handleCreateCase = () => {
+    if (!draft.company.trim() || !draft.sector.trim() || !draft.origin.trim() || !draft.request.trim()) return
+
+    const nextNumber = String(cases.length + 1).padStart(3, '0')
+    const newCase: CaseItem = {
+      id: `CASE-${nextNumber}`,
+      company: draft.company.trim(),
+      website: draft.website.trim(),
+      sector: draft.sector.trim(),
+      origin: draft.origin.trim(),
+      request: draft.request.trim(),
+      priority: draft.priority,
+      notes: draft.notes.trim(),
+      currentPhase: 'Nuevo caso',
+      currentAgent: 'Agente analista de negocio',
+      expectedOutput: 'Ficha de caso creada y prioridad inicial',
+      nextStep: 'Revisar datos de entrada y lanzar análisis',
+      blocker: 'Sin bloqueos',
+      status: 'Nuevo',
+      documents: ['Ficha de caso'],
+      checklist: [
+        { label: 'Datos básicos registrados', done: true },
+        { label: 'Prioridad inicial definida', done: true },
+        { label: 'Análisis lanzado', done: false },
+      ],
+      history: [{ label: 'Caso creado desde Nuevo caso', time: 'Ahora' }],
+    }
+
+    setCases((prev) => [newCase, ...prev])
+    setSelectedCaseId(newCase.id)
+    setDraft(initialDraft)
+    setIsCreateOpen(false)
+    setActiveView('casos')
+  }
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div>
-          <div className="brand-mark">⚡</div>
-          <div className="brand-block">
-            <p className="eyebrow">AGENTSYST</p>
-            <h1>Motor interno</h1>
-            <p className="muted">Cockpit operativo para casos, agentes internos, producción y entrega.</p>
-          </div>
+        <div className="brand-block">
+          <div className="brand-mark">A</div>
+          <p className="eyebrow">AGENTSYST Center</p>
+          <h1>Panel interno v1</h1>
+          <p className="muted">Entrada real por Nuevo caso. Sin relleno visible. Flujo comercial-operativo claro de principio a fin.</p>
         </div>
 
         <nav className="nav-list">
@@ -84,717 +103,342 @@ function App() {
               className={`nav-item ${activeView === item.key ? 'active' : ''}`}
               onClick={() => setActiveView(item.key)}
             >
-              <span>{item.label}</span>
+              {item.label}
             </button>
           ))}
         </nav>
 
-        <div className="sidebar-card">
-          <p className="eyebrow">Meta</p>
-          <h3>Operativo el lunes</h3>
-          <p className="muted">Caso, fase, agente actual, output esperado y siguiente handoff visibles sin fricción.</p>
-        </div>
+        <section className="sidebar-card">
+          <p className="eyebrow">Entrada obligatoria</p>
+          <h3>Nuevo caso</h3>
+          <p className="muted">Crea un caso manualmente o deja preparado el hueco para importar una ficha desde web o captación.</p>
+          <div className="stack-sm">
+            <button className="primary-btn" onClick={() => setIsCreateOpen(true)}>Crear caso</button>
+            <button className="ghost-btn" type="button">Importar ficha próximamente</button>
+          </div>
+        </section>
       </aside>
 
       <main className="main-layout">
         <header className="topbar">
           <div>
             <p className="eyebrow">Motor AGENTSYST</p>
-            <h2>{currentLabel}</h2>
+            <h2>{activeView === 'panel' ? 'Visión general' : navigation.find((item) => item.key === activeView)?.label}</h2>
           </div>
           <div className="topbar-actions">
-            <input className="search" placeholder="Buscar caso, agente, entrega o activo..." />
-            <button className="primary-btn">Nuevo caso</button>
+            <input
+              className="search"
+              placeholder="Buscar por empresa, caso, origen o fase"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            <button className="primary-btn" onClick={() => setIsCreateOpen(true)}>Nuevo caso</button>
           </div>
         </header>
 
-        <section className="content-grid">
-          <div className="content-main">
-            {activeView === 'resumen' && <SummaryView />}
-            {activeView === 'casos' && (
-              <CasesView
-                selectedCase={selectedCase}
-                onSelectCase={setSelectedCaseId}
-                onJumpToAgent={jumpToAgentByName}
-                onJumpToDelivery={jumpToDelivery}
-              />
-            )}
-            {activeView === 'diagnostico' && <DiagnosisView />}
-            {activeView === 'arquitectura' && <ArchitectureView />}
-            {activeView === 'produccion' && <ProductionView />}
-            {activeView === 'validacion' && <ValidationView />}
-            {activeView === 'entrega' && (
-              <DeliveryView
-                selectedDelivery={selectedDelivery}
-                onSelectDelivery={setSelectedDeliveryCaseId}
-                onJumpToCase={jumpToCase}
-                onJumpToAgent={jumpToAgentByName}
-              />
-            )}
-            {activeView === 'biblioteca' && <LibraryView />}
-            {activeView === 'agentes' && (
-              <AgentsView
-                selectedAgent={selectedAgent}
-                onSelectAgent={setSelectedAgentId}
-                onJumpToCase={jumpToCase}
-              />
-            )}
-          </div>
+        {activeView === 'panel' && (
+          <div className="stack-lg">
+            <section className="hero-card panel-card">
+              <div>
+                <p className="eyebrow">Arranque del sistema</p>
+                <h3>Todo empieza creando un caso real</h3>
+                <p className="muted">El panel no muestra leads ficticios por defecto. Si el motor está vacío, el primer paso es abrir Nuevo caso y capturar el contexto mínimo.</p>
+              </div>
+              <div className="hero-actions">
+                <button className="primary-btn" onClick={() => setIsCreateOpen(true)}>Crear caso</button>
+                <button className="ghost-btn" type="button">Importar ficha próximamente</button>
+              </div>
+            </section>
 
-          <aside className="activity-panel">
-            <div className="panel-card">
+            <section className="metrics-grid">
+              <MetricCard label="Estado del motor" value={currentCasesLabel} detail={cases.length === 0 ? 'Listo para arrancar' : 'Casos activos en seguimiento'} />
+              <MetricCard label="Bloqueos" value={String(cases.filter((item) => item.status === 'Bloqueado').length)} detail="Casos que requieren decisión" />
+              <MetricCard label="Fase actual más poblada" value={getTopPhase(phaseCounts)} detail="Ayuda a detectar carga operativa" />
+            </section>
+
+            <section className="panel-card stack-md">
               <div className="panel-head">
                 <div>
-                  <p className="eyebrow">Actividad reciente</p>
-                  <h3>Timeline operativa</h3>
+                  <p className="eyebrow">Flujo oficial v1</p>
+                  <h3>Recorrido completo del caso</h3>
                 </div>
               </div>
-              <div className="timeline-list">
-                {timeline.map((event) => (
-                  <div key={event.id} className="timeline-item">
-                    <span className={`dot ${event.tone}`}></span>
-                    <div>
-                      <strong>{event.title}</strong>
-                      <p>{event.description}</p>
-                      <small>{event.time}</small>
-                    </div>
-                  </div>
-                ))}
+              <PhaseBoard phases={phaseCounts} />
+            </section>
+          </div>
+        )}
+
+        {activeView === 'casos' && (
+          <div className="cases-layout">
+            <section className="panel-card stack-md">
+              <div className="panel-head">
+                <div>
+                  <p className="eyebrow">Casos</p>
+                  <h3>Vista operativa</h3>
+                </div>
+              </div>
+              {filteredCases.length === 0 ? (
+                <EmptyState onCreate={() => setIsCreateOpen(true)} />
+              ) : (
+                <div className="case-list">
+                  {filteredCases.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`case-row ${selectedCase?.id === item.id ? 'active' : ''}`}
+                      onClick={() => setSelectedCaseId(item.id)}
+                    >
+                      <div>
+                        <strong>{item.company}</strong>
+                        <p>{item.id} · {item.sector}</p>
+                      </div>
+                      <div className="case-row-meta">
+                        <span className="pill">{item.currentPhase}</span>
+                        <span className="pill subtle">{item.currentAgent}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="panel-card stack-md">
+              {selectedCase ? <CaseDetail item={selectedCase} /> : <EmptyDetail />}
+            </section>
+          </div>
+        )}
+
+        {activeView === 'fases' && (
+          <section className="panel-card stack-md">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Fases</p>
+                <h3>Qué ocurre en cada tramo</h3>
               </div>
             </div>
-          </aside>
-        </section>
-      </main>
-    </div>
-  )
-}
-
-function SummaryView() {
-  return (
-    <div className="stack-lg">
-      <section className="kpi-grid">
-        {kpis.map((card) => (
-          <article key={card.label} className="kpi-card">
-            <p>{card.label}</p>
-            <h3>{card.value}</h3>
-            <span className={`delta ${card.tone}`}>{card.delta}</span>
-          </article>
-        ))}
-      </section>
-
-      <section className="panel-card stack-md">
-        <div className="panel-head">
-          <div>
-            <p className="eyebrow">Pipeline</p>
-            <h3>Casos por fase</h3>
-          </div>
-        </div>
-        <PipelineBoard />
-      </section>
-
-      <PhaseOutputsBoard />
-
-      <section className="panel-card">
-        <div className="panel-head">
-          <div>
-            <p className="eyebrow">Focos del día</p>
-            <h3>Prioridades del motor</h3>
-          </div>
-        </div>
-        <div className="priority-grid">
-          <div className="mini-card">
-            <strong>Casos</strong>
-            <p>Entrar leads validados y dejar clara su fase, prioridad y tipo de proyecto.</p>
-          </div>
-          <div className="mini-card">
-            <strong>Agentes</strong>
-            <p>Reflejar qué agente interno tiene cada caso y cuál es el siguiente handoff.</p>
-          </div>
-          <div className="mini-card">
-            <strong>Entrega</strong>
-            <p>Llegar al lunes con visión clara de bloqueos, demos y outputs pendientes.</p>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
-}
-
-function CasesView({
-  selectedCase,
-  onSelectCase,
-  onJumpToAgent,
-  onJumpToDelivery,
-}: {
-  selectedCase?: CaseItem
-  onSelectCase: (caseId: string) => void
-  onJumpToAgent: (agentName: string) => void
-  onJumpToDelivery: (caseId: string) => void
-}) {
-  return (
-    <div className="stack-lg">
-      <section className="panel-card stack-md">
-        <div className="panel-head">
-          <div>
-            <p className="eyebrow">Vista</p>
-            <h3>Pipeline operativo</h3>
-          </div>
-        </div>
-        <PipelineBoard />
-      </section>
-      <DataTable
-        title="Casos activos del motor"
-        columns={['Caso', 'Empresa', 'Vertical', 'Proyecto', 'Fase', 'Agente actual', 'Siguiente agente', 'Prioridad', 'Estado']}
-        rows={cases.map((item) => [item.id, item.company, item.vertical, item.projectType, item.currentPhase, item.currentAgent, item.nextAgent, item.priority, item.status])}
-      />
-      <DetailSelector
-        label="Ficha de caso"
-        value={selectedCase?.id ?? ''}
-        options={cases.map((item) => ({ value: item.id, label: `${item.id} · ${item.company}` }))}
-        onChange={onSelectCase}
-      />
-      {selectedCase && <CaseDetailCard item={selectedCase} onJumpToAgent={onJumpToAgent} onJumpToDelivery={onJumpToDelivery} />}
-    </div>
-  )
-}
-
-function DiagnosisView() {
-  return (
-    <DataTable
-      title="Cola de diagnóstico"
-      columns={['Caso', 'Empresa', 'Agente', 'Problema detectado', 'Oportunidad', 'Complejidad', 'Estado informe', 'Siguiente decisión']}
-      rows={diagnosisQueue.map((item) => [item.caseId, item.company, item.diagnosisAgent, item.detectedProblem, item.opportunity, item.complexity, item.reportStatus, item.nextDecision])}
-    />
-  )
-}
-
-function ArchitectureView() {
-  return (
-    <DataTable
-      title="Diseño de arquitectura"
-      columns={['Caso', 'Empresa', 'Solución', 'Canales', 'Agentes requeridos', 'Outputs obligatorios', 'Estado', 'Siguiente paso']}
-      rows={architectureQueue.map((item) => [item.caseId, item.company, item.solutionType, item.channels, item.requiredAgents, item.mandatoryOutputs, item.architectureStatus, item.nextStep])}
-    />
-  )
-}
-
-function ProductionView() {
-  return (
-    <DataTable
-      title="Ramas de producción"
-      columns={['Caso', 'Empresa', 'Rama', 'Agente responsable', 'Output esperado', 'Estado', 'Bloqueo', 'Dependencia', 'Deadline']}
-      rows={productionQueue.map((item) => [item.caseId, item.company, item.workstream, item.ownerAgent, item.expectedOutput, item.status, item.blocker, item.dependency, item.deadline])}
-    />
-  )
-}
-
-function ValidationView() {
-  return (
-    <DataTable
-      title="QA y validación"
-      columns={['Caso', 'Empresa', 'Pieza', 'Revisor', 'Estado QA', 'Incidencia', 'Acción requerida']}
-      rows={validationQueue.map((item) => [item.caseId, item.company, item.asset, item.reviewer, item.qaStatus, item.issue, item.requiredAction])}
-    />
-  )
-}
-
-function DeliveryView({
-  selectedDelivery,
-  onSelectDelivery,
-  onJumpToCase,
-  onJumpToAgent,
-}: {
-  selectedDelivery?: DeliveryItem
-  onSelectDelivery: (caseId: string) => void
-  onJumpToCase: (caseId: string) => void
-  onJumpToAgent: (agentName: string) => void
-}) {
-  return (
-    <div className="stack-lg">
-      <DataTable
-        title="Demo / entrega"
-        columns={['Caso', 'Empresa', 'Tipo de entrega', 'Estado', 'Faltantes', 'Responsable', 'Fecha objetivo']}
-        rows={deliveryQueue.map((item) => [item.caseId, item.company, item.deliveryType, item.demoStatus, item.missingItems, item.owner, item.targetDate])}
-      />
-      <DetailSelector
-        label="Ficha de entrega"
-        value={selectedDelivery?.caseId ?? ''}
-        options={deliveryQueue.map((item) => ({ value: item.caseId, label: `${item.caseId} · ${item.company}` }))}
-        onChange={onSelectDelivery}
-      />
-      {selectedDelivery && <DeliveryDetailCard item={selectedDelivery} onJumpToCase={onJumpToCase} onJumpToAgent={onJumpToAgent} />}
-    </div>
-  )
-}
-
-function LibraryView() {
-  return (
-    <DataTable
-      title="Biblioteca operativa"
-      columns={['Activo', 'Tipo', 'Dominio', 'Uso', 'Actualizado', 'Owner']}
-      rows={libraryAssets.map((asset) => [asset.title, asset.type, asset.domain, asset.usage, asset.updatedAt, asset.owner])}
-    />
-  )
-}
-
-function AgentsView({
-  selectedAgent,
-  onSelectAgent,
-  onJumpToCase,
-}: {
-  selectedAgent?: AgentItem
-  onSelectAgent: (agentId: string) => void
-  onJumpToCase: (caseId: string) => void
-}) {
-  return (
-    <div className="stack-lg">
-      <DataTable
-        title="Agentes internos AGENTSYST"
-        columns={['Agente', 'Misión', 'Fase', 'Input', 'Output', 'Estado', 'Handoff siguiente']}
-        rows={agents.map((agent) => [agent.name, agent.mission, agent.phase, agent.input, agent.output, agent.status, agent.handoffTo])}
-      />
-      <DetailSelector
-        label="Ficha de agente"
-        value={selectedAgent?.id ?? ''}
-        options={agents.map((item) => ({ value: item.id, label: item.name }))}
-        onChange={onSelectAgent}
-      />
-      {selectedAgent && <AgentDetailCard item={selectedAgent} onJumpToCase={onJumpToCase} />}
-    </div>
-  )
-}
-
-function PipelineBoard() {
-  return (
-    <div className="pipeline-grid">
-      {phaseOrder.map((phase) => {
-        const phaseCases = cases.filter((item) => item.currentPhase === phase)
-        return (
-          <div key={phase} className="phase-column">
-            <div className="phase-head">
-              <strong>{phase}</strong>
-              <span className="count-badge">{phaseCases.length}</span>
-            </div>
-            <div className="phase-stack">
-              {phaseCases.length === 0 && <p className="muted">Sin casos</p>}
-              {phaseCases.map((item) => (
-                <article key={item.id} className="mini-card phase-card">
-                  <div className="phase-card-top">
-                    <strong>{item.id}</strong>
-                    <StatusBadge kind={item.status} />
+            <div className="phase-detail-list">
+              {phaseCounts.map((item) => (
+                <article key={item.phase} className="phase-detail-card">
+                  <div className="phase-detail-top">
+                    <div>
+                      <strong>{item.phase}</strong>
+                      <p>{item.description}</p>
+                    </div>
+                    <span className="count-badge">{item.count}</span>
                   </div>
-                  <p className="phase-company">{item.company}</p>
-                  <p className="muted">{item.projectType}</p>
-                  <div className="phase-meta">
-                    <PriorityBadge priority={item.priority} />
-                    <span className="agent-chip">{item.currentAgent}</span>
+                  <div className="detail-pairs">
+                    <DetailPair label="Agente responsable" value={item.agent} />
+                    <DetailPair label="Output esperado" value={item.output} />
                   </div>
                 </article>
               ))}
             </div>
-          </div>
-        )
-      })}
+          </section>
+        )}
+
+        {activeView === 'agentes' && (
+          <section className="panel-card stack-md">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Agentes obreros oficiales</p>
+                <h3>Responsables del flujo v1</h3>
+              </div>
+            </div>
+            <div className="agent-grid">
+              {agents.map((agent) => (
+                <article key={agent.id} className="agent-card">
+                  <p className="eyebrow">{agent.phase}</p>
+                  <h4>{agent.name}</h4>
+                  <p>{agent.mission}</p>
+                  <DetailPair label="Output" value={agent.output} />
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+
+      {isCreateOpen && (
+        <CreateCaseModal draft={draft} onChange={setDraft} onClose={() => setIsCreateOpen(false)} onSubmit={handleCreateCase} />
+      )}
     </div>
   )
 }
 
-function PhaseOutputsBoard() {
+function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <section className="panel-card stack-md">
-      <div className="panel-head">
-        <div>
-          <p className="eyebrow">Motor v1</p>
-          <h3>Agentes oficiales y outputs por fase</h3>
-        </div>
-      </div>
-      <div className="outputs-grid">
-        {phaseOutputs.map((item) => (
-          <article key={item.phase} className="mini-card detail-block">
-            <div className="phase-card-top">
-              <strong>{item.phase}</strong>
-              <StatusBadge kind={item.ownerAgent} />
-            </div>
-            <div className="detail-list">
-              <div className="detail-row">
-                <span>Agente owner</span>
-                <p>{item.ownerAgent}</p>
-              </div>
-              <div className="detail-row">
-                <span>Output obligatorio</span>
-                <p>{item.requiredOutput}</p>
-              </div>
-              <div className="detail-row">
-                <span>Gate de validación</span>
-                <p>{item.validationGate}</p>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
+    <article className="metric-card">
+      <p>{label}</p>
+      <h3>{value}</h3>
+      <span>{detail}</span>
+    </article>
   )
 }
 
-function DetailSelector({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: string
-  options: { value: string; label: string }[]
-  onChange: (value: string) => void
-}) {
+function PhaseBoard({ phases }: { phases: Array<{ phase: CasePhase; agent: string; output: string; description: string; count: number }> }) {
   return (
-    <section className="panel-card stack-md">
-      <div className="panel-head compact-head">
-        <div>
-          <p className="eyebrow">Detalle</p>
-          <h3>{label}</h3>
-        </div>
-        <select className="select-input" value={value} onChange={(event) => onChange(event.target.value)}>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </section>
+    <div className="phase-board">
+      {phases.map((item) => (
+        <article key={item.phase} className="phase-column">
+          <div className="phase-column-top">
+            <strong>{item.phase}</strong>
+            <span className="count-badge">{item.count}</span>
+          </div>
+          <p>{item.description}</p>
+          <small>{item.agent}</small>
+        </article>
+      ))}
+    </div>
   )
 }
 
-function CaseDetailCard({
-  item,
-  onJumpToAgent,
-  onJumpToDelivery,
-}: {
-  item: CaseItem
-  onJumpToAgent: (agentName: string) => void
-  onJumpToDelivery: (caseId: string) => void
-}) {
-  const hasDelivery = deliveryQueue.some((delivery) => delivery.caseId === item.id)
-
+function CaseDetail({ item }: { item: CaseItem }) {
   return (
-    <section className="panel-card stack-md">
+    <>
       <div className="panel-head">
         <div>
           <p className="eyebrow">Ficha de caso</p>
           <h3>{item.id} · {item.company}</h3>
         </div>
-        <div className="badge-row">
-          <PriorityBadge priority={item.priority} />
-          <StatusBadge kind={item.status} />
-        </div>
+        <span className="pill">{item.currentPhase}</span>
       </div>
-      <div className="action-row">
-        <button className="secondary-btn" onClick={() => onJumpToAgent(item.currentAgent)}>Ver agente actual</button>
-        <button className="secondary-btn" onClick={() => onJumpToAgent(item.nextAgent)}>Ver siguiente agente</button>
-        <button className="secondary-btn" onClick={() => hasDelivery && onJumpToDelivery(item.id)} disabled={!hasDelivery}>Ver entrega</button>
-      </div>
+
       <div className="detail-grid">
-        <DetailBlock title="Cabecera" items={[
-          ['Vertical', item.vertical],
-          ['Proyecto', item.projectType],
-          ['Prioridad', item.priority],
-          ['Estado', item.status],
-          ['Fase actual', item.currentPhase],
-        ]} />
-        <DetailBlock title="Orquestación" items={[
-          ['Agente actual', item.currentAgent],
-          ['Siguiente agente', item.nextAgent],
-          ['Output esperado', item.expectedOutput],
-          ['Deadline', item.targetDate],
-          ['Bloqueo', item.blocker],
-        ]} />
-        <DetailBlock title="Contexto" items={[
-          ['Origen', item.origin],
-          ['Necesidad', item.need],
-          ['Diagnóstico', item.diagnosisSummary],
-          ['Nota estratégica', item.strategyNote],
-        ]} />
-        <DetailBlock title="Producción" items={[
-          ['Ramas activas', item.activeWorkstreams.join(' · ')],
-          ['Piezas en curso', item.expectedOutput],
-          ['Dependencias', item.dependencies.join(' · ')],
-          ['Soporte Dev', item.devSupport],
-        ]} />
-        <DetailBlock title="Entrega" items={[
-          ['Tipo', item.deliveryType],
-          ['Estado', item.deliveryStatus],
-          ['Faltantes', item.missingItems.join(' · ')],
-          ['Fecha objetivo', item.targetDate],
-        ]} />
+        <DetailPair label="Empresa" value={item.company} />
+        <DetailPair label="Web" value={item.website || 'No informada'} />
+        <DetailPair label="Sector" value={item.sector} />
+        <DetailPair label="Origen" value={item.origin} />
+        <DetailPair label="Responsable actual" value={item.currentAgent} />
+        <DetailPair label="Estado" value={item.status} />
+        <DetailPair label="Output esperado" value={item.expectedOutput} />
+        <DetailPair label="Siguiente paso" value={item.nextStep} />
+        <DetailPair label="Bloqueos" value={item.blocker} />
       </div>
-      <div className="detail-grid detail-grid-two">
-        <ChecklistCard items={item.checklist} />
-        <HistoryCard items={item.history} />
+
+      <article className="detail-block">
+        <strong>Petición o necesidad</strong>
+        <p>{item.request}</p>
+      </article>
+
+      <article className="detail-block">
+        <strong>Notas</strong>
+        <p>{item.notes || 'Sin notas adicionales todavía.'}</p>
+      </article>
+
+      <div className="detail-split">
+        <article className="detail-block">
+          <strong>Documentos o resultados</strong>
+          <ul>
+            {item.documents.map((doc) => <li key={doc}>{doc}</li>)}
+          </ul>
+        </article>
+        <article className="detail-block">
+          <strong>Checklist</strong>
+          <ul>
+            {item.checklist.map((check) => <li key={check.label}>{check.done ? '✓' : '•'} {check.label}</li>)}
+          </ul>
+        </article>
       </div>
-    </section>
+
+      <article className="detail-block">
+        <strong>Historial</strong>
+        <ul>
+          {item.history.map((event) => <li key={`${event.label}-${event.time}`}>{event.label} · {event.time}</li>)}
+        </ul>
+      </article>
+    </>
   )
 }
 
-function AgentDetailCard({ item, onJumpToCase }: { item: AgentItem; onJumpToCase: (caseId: string) => void }) {
-  const activeCases = cases.filter((caseItem) => caseItem.currentAgent === item.name)
-  const waitingCases = cases.filter((caseItem) => caseItem.nextAgent === item.name)
-
+function DetailPair({ label, value }: { label: string; value: string }) {
   return (
-    <section className="panel-card stack-md">
-      <div className="panel-head">
-        <div>
-          <p className="eyebrow">Ficha de agente</p>
-          <h3>{item.name}</h3>
-        </div>
-        <StatusBadge kind={item.status} />
-      </div>
-      <div className="detail-grid detail-grid-two">
-        <DetailBlock title="Identidad" items={[
-          ['Fase', item.phase],
-          ['Estado', item.status],
-        ]} />
-        <DetailBlock title="Función" items={[
-          ['Misión', item.mission],
-          ['Cuándo entra', `En fase ${item.phase}`],
-          ['Qué decide', 'Produce su output mínimo y habilita el siguiente handoff'],
-        ]} />
-        <DetailBlock title="Operativa" items={[
-          ['Input', item.input],
-          ['Output', item.output],
-          ['Handoff', item.handoffTo],
-          ['Bloqueos típicos', 'Input incompleto / dependencia pendiente / validación faltante'],
-        ]} />
-        <DetailBlock title="Carga" items={[
-          ['Casos activos', `${activeCases.length}`],
-          ['Casos en espera', `${waitingCases.length}`],
-          ['Completados', 'N/D en esta V1'],
-        ]} />
-      </div>
-      <LinkedCasesCard title="Casos activos del agente" casesList={activeCases} onJumpToCase={onJumpToCase} emptyLabel="No tiene casos activos ahora." />
-      <LinkedCasesCard title="Casos esperando este agente" casesList={waitingCases} onJumpToCase={onJumpToCase} emptyLabel="Ningún caso está en cola para este agente." />
-    </section>
+    <div className="detail-pair">
+      <span>{label}</span>
+      <p>{value}</p>
+    </div>
   )
 }
 
-function DeliveryDetailCard({
-  item,
-  onJumpToCase,
-  onJumpToAgent,
-}: {
-  item: DeliveryItem
-  onJumpToCase: (caseId: string) => void
-  onJumpToAgent: (agentName: string) => void
-}) {
-  const linkedCase = cases.find((caseItem) => caseItem.id === item.caseId)
-
+function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <section className="panel-card stack-md">
-      <div className="panel-head">
-        <div>
-          <p className="eyebrow">Ficha de demo / entrega</p>
-          <h3>{item.caseId} · {item.company}</h3>
-        </div>
-        <StatusBadge kind={item.demoStatus} />
-      </div>
-      <div className="action-row">
-        <button className="secondary-btn" onClick={() => onJumpToCase(item.caseId)}>Ver caso</button>
-        <button className="secondary-btn" onClick={() => linkedCase && onJumpToAgent(linkedCase.currentAgent)} disabled={!linkedCase}>Ver agente actual</button>
-      </div>
-      <div className="detail-grid detail-grid-two">
-        <DetailBlock title="Cabecera" items={[
-          ['Tipo de entrega', item.deliveryType],
-          ['Responsable', item.owner],
-          ['Fecha objetivo', item.targetDate],
-        ]} />
-        <DetailBlock title="Estado" items={[
-          ['Demo-ready', item.demoStatus],
-          ['Faltantes', item.missingItems],
-          ['Riesgo', item.demoStatus.includes('Bloqueada') ? 'Alto' : 'Controlado'],
-          ['Decisión pendiente', 'Validar cierre o corregir activos'],
-        ]} />
-        <DetailBlock title="Assets" items={[
-          ['Landing', 'Si aplica según caso'],
-          ['Agente conversacional', 'Incluido si el sistema lo requiere'],
-          ['Backend', 'Validar si existe dependencia técnica'],
-          ['Panel / documentación', 'Añadir según demo final'],
-        ]} />
-        <DetailBlock title="Validación" items={[
-          ['QA completada', 'Pendiente en esta V1'],
-          ['Incidencias abiertas', item.missingItems],
-          ['Aprobador final', 'Vera / Val'],
-        ]} />
-      </div>
-      <ReadinessCard items={item.readiness} />
-    </section>
+    <div className="empty-state">
+      <p className="eyebrow">Vacío elegante</p>
+      <h3>No hay casos todavía</h3>
+      <p>El panel arranca aquí: crea un caso manual o prepara más adelante la importación desde la web o captación.</p>
+      <button className="primary-btn" onClick={onCreate}>Crear primer caso</button>
+    </div>
   )
 }
 
-function LinkedCasesCard({
-  title,
-  casesList,
-  onJumpToCase,
-  emptyLabel,
-}: {
-  title: string
-  casesList: CaseItem[]
-  onJumpToCase: (caseId: string) => void
-  emptyLabel: string
-}) {
+function EmptyDetail() {
   return (
-    <section className="panel-card stack-md">
-      <div className="panel-head">
-        <div>
-          <p className="eyebrow">Relación</p>
-          <h3>{title}</h3>
-        </div>
-      </div>
-      <div className="linked-list">
-        {casesList.length === 0 && <p className="muted">{emptyLabel}</p>}
-        {casesList.map((caseItem) => (
-          <button key={caseItem.id} className="linked-item" onClick={() => onJumpToCase(caseItem.id)}>
-            <strong>{caseItem.id}</strong>
-            <span>{caseItem.company}</span>
-            <small>{caseItem.currentPhase}</small>
-          </button>
-        ))}
-      </div>
-    </section>
+    <div className="empty-detail">
+      <p className="eyebrow">Ficha de caso</p>
+      <h3>Selecciona un caso</h3>
+      <p>Cuando exista al menos un caso, aquí verás fase actual, responsable, output esperado, siguiente paso, bloqueos y resultados.</p>
+    </div>
   )
 }
 
-function DetailBlock({ title, items }: { title: string; items: [string, string][] }) {
+function CreateCaseModal({ draft, onChange, onClose, onSubmit }: { draft: DraftCase; onChange: (draft: DraftCase) => void; onClose: () => void; onSubmit: () => void }) {
   return (
-    <article className="mini-card detail-block">
-      <strong>{title}</strong>
-      <div className="detail-list">
-        {items.map(([label, value]) => (
-          <div key={`${title}-${label}`} className="detail-row">
-            <span>{label}</span>
-            <p>{value}</p>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+        <div className="panel-head">
+          <div>
+            <p className="eyebrow">Nuevo caso</p>
+            <h3>Entrada al motor</h3>
           </div>
-        ))}
-      </div>
-    </article>
-  )
-}
+          <button className="ghost-btn" onClick={onClose}>Cerrar</button>
+        </div>
 
-function ChecklistCard({ items }: { items: { label: string; done: boolean }[] }) {
-  return (
-    <article className="mini-card detail-block">
-      <strong>Checklist operativa</strong>
-      <div className="detail-list">
-        {items.map((item) => (
-          <div key={item.label} className="check-row">
-            <span className={`check-dot ${item.done ? 'done' : 'pending'}`}></span>
-            <p>{item.label}</p>
-          </div>
-        ))}
-      </div>
-    </article>
-  )
-}
+        <div className="form-grid">
+          <Field label="Empresa">
+            <input value={draft.company} onChange={(e) => onChange({ ...draft, company: e.target.value })} placeholder="Ej. Clínica Nova" />
+          </Field>
+          <Field label="Web">
+            <input value={draft.website} onChange={(e) => onChange({ ...draft, website: e.target.value })} placeholder="https://..." />
+          </Field>
+          <Field label="Sector">
+            <input value={draft.sector} onChange={(e) => onChange({ ...draft, sector: e.target.value })} placeholder="Ej. Clínica dental" />
+          </Field>
+          <Field label="Origen">
+            <input value={draft.origin} onChange={(e) => onChange({ ...draft, origin: e.target.value })} placeholder="Web / captación / manual" />
+          </Field>
+          <Field label="Prioridad">
+            <select value={draft.priority} onChange={(e) => onChange({ ...draft, priority: e.target.value as Priority })}>
+              <option>Alta</option>
+              <option>Media</option>
+              <option>Baja</option>
+            </select>
+          </Field>
+          <Field label="Petición o necesidad" full>
+            <textarea value={draft.request} onChange={(e) => onChange({ ...draft, request: e.target.value })} rows={4} placeholder="Qué necesita este negocio o qué oportunidad detectamos..." />
+          </Field>
+          <Field label="Notas" full>
+            <textarea value={draft.notes} onChange={(e) => onChange({ ...draft, notes: e.target.value })} rows={3} placeholder="Contexto adicional, contacto, matices..." />
+          </Field>
+        </div>
 
-function HistoryCard({ items }: { items: { label: string; time: string; tone: 'info' | 'success' | 'warning' }[] }) {
-  return (
-    <article className="mini-card detail-block">
-      <strong>Historial corto</strong>
-      <div className="detail-list">
-        {items.map((item) => (
-          <div key={`${item.label}-${item.time}`} className="history-row">
-            <span className={`dot ${item.tone}`}></span>
-            <div>
-              <p>{item.label}</p>
-              <small>{item.time}</small>
-            </div>
-          </div>
-        ))}
-      </div>
-    </article>
-  )
-}
-
-function ReadinessCard({ items }: { items: { label: string; status: string }[] }) {
-  return (
-    <section className="panel-card stack-md">
-      <div className="panel-head">
-        <div>
-          <p className="eyebrow">Readiness</p>
-          <h3>Checklist de entrega</h3>
+        <div className="modal-actions">
+          <button className="primary-btn" onClick={onSubmit}>Crear caso</button>
         </div>
       </div>
-      <div className="readiness-grid">
-        {items.map((item) => (
-          <article key={item.label} className="mini-card detail-block">
-            <strong>{item.label}</strong>
-            <StatusBadge kind={item.status} />
-          </article>
-        ))}
-      </div>
-    </section>
+    </div>
   )
 }
 
-function StatusBadge({ kind }: { kind: string }) {
-  const tone = getTone(kind)
-  return <span className={`status-badge ${tone}`}>{kind}</span>
-}
-
-function PriorityBadge({ priority }: { priority: string }) {
-  const tone = priority === 'Alta' ? 'warning' : priority === 'Media' ? 'neutral' : 'success'
-  return <span className={`status-badge ${tone}`}>{priority}</span>
-}
-
-function getTone(value: string) {
-  const normalized = value.toLowerCase()
-  if (normalized.includes('bloque')) return 'warning'
-  if (normalized.includes('alta')) return 'warning'
-  if (normalized.includes('activo')) return 'success'
-  if (normalized.includes('ready')) return 'success'
-  if (normalized.includes('complet')) return 'success'
-  if (normalized.includes('disponible')) return 'neutral'
-  return 'neutral'
-}
-
-function DataTable({
-  title,
-  columns,
-  rows,
-}: {
-  title: string
-  columns: string[]
-  rows: string[][]
-}) {
+function Field({ label, full, children }: { label: string; full?: boolean; children: ReactNode }) {
   return (
-    <section className="panel-card stack-md">
-      <div className="panel-head">
-        <div>
-          <p className="eyebrow">Vista</p>
-          <h3>{title}</h3>
-        </div>
-      </div>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              {columns.map((column) => (
-                <th key={column}>{column}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={`${title}-${index}`}>
-                {row.map((cell, cellIndex) => (
-                  <td key={`${title}-${index}-${cellIndex}`}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <label className={`field ${full ? 'full' : ''}`}>
+      <span>{label}</span>
+      {children}
+    </label>
   )
+}
+
+function getTopPhase(phasesWithCount: Array<{ phase: CasePhase; count: number }>) {
+  const top = phasesWithCount.reduce((best, item) => (item.count > best.count ? item : best), phasesWithCount[0])
+  return top.count === 0 ? 'Sin casos aún' : top.phase
 }
 
 export default App
