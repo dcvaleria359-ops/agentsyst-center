@@ -7,6 +7,7 @@ import type {
   KpiCard,
   LibraryAsset,
   NavigationKey,
+  PhaseOutput,
   ProductionItem,
   TimelineEvent,
   ValidationItem,
@@ -259,6 +260,51 @@ export const deliveryQueue: DeliveryItem[] = [
       { label: 'Especialización sectorial', status: 'Bloqueada' },
       { label: 'Checklist final', status: 'Pendiente' },
     ],
+  },
+]
+
+export const phaseOutputs: PhaseOutput[] = [
+  {
+    phase: 'Intake',
+    ownerAgent: 'Intake de Lead',
+    requiredOutput: 'Ficha de caso creada y priorizada',
+    validationGate: 'Lead validado y ruta interna definida',
+  },
+  {
+    phase: 'Diagnóstico',
+    ownerAgent: 'Diagnóstico',
+    requiredOutput: 'Informe de diagnóstico',
+    validationGate: 'Problema, oportunidad y siguiente paso claros',
+  },
+  {
+    phase: 'Arquitectura',
+    ownerAgent: 'Arquitectura de Solución',
+    requiredOutput: 'Documento de arquitectura',
+    validationGate: 'Sistema, canales, agentes y outputs cerrados',
+  },
+  {
+    phase: 'Diseño',
+    ownerAgent: 'Diseño de Solución',
+    requiredOutput: 'Plan de solución y ramas activadas',
+    validationGate: 'Piezas a producir y checklist inicial definidos',
+  },
+  {
+    phase: 'Producción',
+    ownerAgent: 'Producción Técnica',
+    requiredOutput: 'Piezas construidas o listas para QA',
+    validationGate: 'Componentes mínimos ejecutables disponibles',
+  },
+  {
+    phase: 'Validación',
+    ownerAgent: 'QA y Validación',
+    requiredOutput: 'Informe QA y decisión',
+    validationGate: 'Aprobado, corregir o bloquear declarado',
+  },
+  {
+    phase: 'Demo / Entrega',
+    ownerAgent: 'Preparación de Demo / Entrega',
+    requiredOutput: 'Paquete final demo-ready',
+    validationGate: 'Assets, narrativa y checklist final listos',
   },
 ]
 

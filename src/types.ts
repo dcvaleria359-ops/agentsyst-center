@@ -34,6 +34,13 @@ export interface ChecklistItem {
   done: boolean
 }
 
+export interface PhaseOutput {
+  phase: CasePhase
+  ownerAgent: string
+  requiredOutput: string
+  validationGate: string
+}
+
 export interface CaseItem {
   id: string
   company: string

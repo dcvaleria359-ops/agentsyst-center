@@ -9,6 +9,7 @@ import {
   kpis,
   libraryAssets,
   navigation,
+  phaseOutputs,
   productionQueue,
   timeline,
   validationQueue,
@@ -190,6 +191,8 @@ function SummaryView() {
         </div>
         <PipelineBoard />
       </section>
+
+      <PhaseOutputsBoard />
 
       <section className="panel-card">
         <div className="panel-head">
@@ -393,6 +396,43 @@ function PipelineBoard() {
         )
       })}
     </div>
+  )
+}
+
+function PhaseOutputsBoard() {
+  return (
+    <section className="panel-card stack-md">
+      <div className="panel-head">
+        <div>
+          <p className="eyebrow">Motor v1</p>
+          <h3>Agentes oficiales y outputs por fase</h3>
+        </div>
+      </div>
+      <div className="outputs-grid">
+        {phaseOutputs.map((item) => (
+          <article key={item.phase} className="mini-card detail-block">
+            <div className="phase-card-top">
+              <strong>{item.phase}</strong>
+              <StatusBadge kind={item.ownerAgent} />
+            </div>
+            <div className="detail-list">
+              <div className="detail-row">
+                <span>Agente owner</span>
+                <p>{item.ownerAgent}</p>
+              </div>
+              <div className="detail-row">
+                <span>Output obligatorio</span>
+                <p>{item.requiredOutput}</p>
+              </div>
+              <div className="detail-row">
+                <span>Gate de validación</span>
+                <p>{item.validationGate}</p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }
 

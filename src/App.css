@@ -203,7 +203,8 @@ input {
 .pipeline-grid,
 .badge-row,
 .phase-meta,
-.readiness-grid {
+.readiness-grid,
+.outputs-grid {
   display: grid;
   gap: 16px;
 }
@@ -221,6 +222,10 @@ input {
 .pipeline-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: start;
+}
+
+.outputs-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .kpi-card,
@@ -512,7 +517,8 @@ th {
   .detail-grid,
   .detail-grid-two,
   .pipeline-grid,
-  .readiness-grid {
+  .readiness-grid,
+  .outputs-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -555,7 +561,8 @@ th {
   .detail-grid-two,
   .pipeline-grid,
   .phase-meta,
-  .readiness-grid {
+  .readiness-grid,
+  .outputs-grid {
     grid-template-columns: 1fr;
   }
 
