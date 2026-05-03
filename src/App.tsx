@@ -21,9 +21,9 @@ function App() {
 
     try {
       const [leadsRes, casesRes, agentsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/leads`),
-        fetch(`${API_BASE}/api/cases`),
-        fetch(`${API_BASE}/api/agents/status`),
+        fetch(`${API_BASE}/leads`),
+        fetch(`${API_BASE}/cases`),
+        fetch(`${API_BASE}/agents/status`),
       ])
 
       if (!leadsRes.ok) throw new Error('No se pudieron cargar los leads reales')
@@ -86,7 +86,7 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(`${API_BASE}/api/cases`, {
+      const response = await fetch(`${API_BASE}/cases`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: leadId }),

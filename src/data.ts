@@ -1,6 +1,6 @@
 import type { AgentItem, PhaseItem } from './types'
 
-export const API_BASE = 'http://72.62.238.12:3001'
+export const API_BASE = '/api'
 
 export const navigation: { key: 'panel' | 'casos' | 'fases' | 'agentes'; label: string }[] = [
   { key: 'panel', label: 'Panel' },
