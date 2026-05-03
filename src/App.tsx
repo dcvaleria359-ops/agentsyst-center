@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import './App.css'
-import { API_BASE, fallbackAgents, navigation, phases } from './data'
+import { API_BASE, SUPABASE_ANON_KEY, SUPABASE_URL, fallbackAgents, navigation, phases } from './data'
 import type { AgentItem, CaseItem, CasePhase, LeadItem, NavigationKey } from './types'
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 function App() {
   const [activeView, setActiveView] = useState<NavigationKey>('panel')
@@ -20,17 +23,17 @@ function App() {
     setError('')
 
     try {
-      const [leadsRes, casesRes, agentsRes] = await Promise.all([
-        fetch(`${API_BASE}/leads`),
+      const [leadsResult, casesRes, agentsRes] = await Promise.all([
+        supabase.from('leads').select('*').order('fecha', { ascending: false }),
         fetch(`${API_BASE}/cases`),
         fetch(`${API_BASE}/agents/status`),
       ])
 
-      if (!leadsRes.ok) throw new Error('No se pudieron cargar los leads reales')
+      if (leadsResult.error) throw new Error(`No se pudieron cargar los leads reales: ${leadsResult.error.message}`)
       if (!casesRes.ok) throw new Error('No se pudieron cargar los casos reales')
       if (!agentsRes.ok) throw new Error('No se pudo cargar el estado real de agentes')
 
-      const leadsData: LeadItem[] = await leadsRes.json()
+      const leadsData: LeadItem[] = (leadsResult.data as LeadItem[]) ?? []
       const casesData: CaseItem[] = await casesRes.json()
       const agentsData: AgentItem[] = await agentsRes.json()
 
