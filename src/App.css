@@ -409,6 +409,62 @@ textarea {
   width: min(880px, 100%);
 }
 
+.notice {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #dbe2ef;
+}
+
+.notice.error {
+  background: rgba(146, 41, 41, 0.18);
+  border-color: rgba(255, 120, 120, 0.24);
+  color: #ffd7d7;
+}
+
+.table-wrap {
+  overflow: auto;
+  border-radius: 18px;
+}
+
+.table-wrap table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.table-wrap th,
+.table-wrap td {
+  text-align: left;
+  padding: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.table-wrap th {
+  color: #dbe2ef;
+  font-size: 0.84rem;
+}
+
+.click-row {
+  cursor: pointer;
+}
+
+.click-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.compact-btn {
+  padding: 8px 12px;
+  border-radius: 12px;
+}
+
+.top-gap {
+  margin-top: 20px;
+}
+
 @media (max-width: 1200px) {
   .metrics-grid,
   .detail-grid,

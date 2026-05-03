@@ -1,5 +1,7 @@
 import type { AgentItem, PhaseItem } from './types'
 
+export const API_BASE = 'http://72.62.238.12:3001'
+
 export const navigation: { key: 'panel' | 'casos' | 'fases' | 'agentes'; label: string }[] = [
   { key: 'panel', label: 'Panel' },
   { key: 'casos', label: 'Casos' },
@@ -52,10 +54,11 @@ export const phases: PhaseItem[] = [
   },
 ]
 
-export const agents: AgentItem[] = phases.map((phase, index) => ({
+export const fallbackAgents: AgentItem[] = phases.slice(1).map((phase, index) => ({
   id: `AG-${String(index + 1).padStart(3, '0')}`,
   name: phase.agent,
   phase: phase.phase,
   mission: phase.description,
   output: phase.output,
+  status: 'sin verificar',
 }))

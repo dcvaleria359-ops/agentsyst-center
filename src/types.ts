@@ -23,6 +23,7 @@ export interface HistoryEvent {
 
 export interface CaseItem {
   id: string
+  leadId?: number
   company: string
   website: string
   sector: string
@@ -47,6 +48,9 @@ export interface AgentItem {
   phase: CasePhase
   mission: string
   output: string
+  slug?: string
+  installed?: boolean
+  status?: string
 }
 
 export interface PhaseItem {
@@ -54,4 +58,20 @@ export interface PhaseItem {
   agent: string
   output: string
   description: string
+}
+
+export interface LeadItem {
+  id: number
+  fecha: string
+  nombre_negocio: string | null
+  nombre_contacto: string | null
+  tipo_negocio: string | null
+  whatsapp: string | null
+  email: string | null
+  website: string | null
+  instagram: string | null
+  problema: string | null
+  estado: string | null
+  notas: string | null
+  gdpr_aceptado: boolean
 }
