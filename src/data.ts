@@ -1,7 +1,5 @@
 import type { AgentItem, PhaseItem } from './types'
 
-export const SUPABASE_URL = 'https://tcwurtymzogbtiizqmwm.supabase.co'
-export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjd3VydHltem9nYnRpaXpxbXdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3Njg0MDQsImV4cCI6MjA5MzM0NDQwNH0.h58MdKDBFPGAXsIJcY9BLpTnsI5jhb7ExEziQRv33uY'
 export const API_BASE = '/api'
 
 export const navigation: { key: 'panel' | 'casos' | 'fases' | 'agentes'; label: string }[] = [

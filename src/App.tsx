@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import './App.css'
-import { API_BASE, SUPABASE_ANON_KEY, SUPABASE_URL, fallbackAgents, navigation, phases } from './data'
+import { API_BASE, fallbackAgents, navigation, phases } from './data'
 import type { AgentItem, CaseItem, CasePhase, LeadItem, NavigationKey } from './types'
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 function App() {
   const [activeView, setActiveView] = useState<NavigationKey>('panel')
@@ -23,23 +20,31 @@ function App() {
     setError('')
 
     try {
-      const [leadsResult, casesRes, agentsRes] = await Promise.all([
-        supabase.from('leads').select('*').order('fecha', { ascending: false }),
-        fetch(`${API_BASE}/cases`),
-        fetch(`${API_BASE}/agents/status`),
+      const leadsRes = await fetch(`${API_BASE}/leads`)
+      if (!leadsRes.ok) throw new Error('No se pudieron cargar los leads reales')
+      const leadsData: LeadItem[] = await leadsRes.json()
+
+      const [casesResult, agentsResult] = await Promise.allSettled([
+        fetch(`${API_BASE}/cases`).then(async (response) => {
+          if (!response.ok) throw new Error('cases_unavailable')
+          return response.json() as Promise<CaseItem[]>
+        }),
+        fetch(`${API_BASE}/agents/status`).then(async (response) => {
+          if (!response.ok) throw new Error('agents_unavailable')
+          return response.json() as Promise<AgentItem[]>
+        }),
       ])
 
-      if (leadsResult.error) throw new Error(`No se pudieron cargar los leads reales: ${leadsResult.error.message}`)
-      if (!casesRes.ok) throw new Error('No se pudieron cargar los casos reales')
-      if (!agentsRes.ok) throw new Error('No se pudo cargar el estado real de agentes')
-
-      const leadsData: LeadItem[] = (leadsResult.data as LeadItem[]) ?? []
-      const casesData: CaseItem[] = await casesRes.json()
-      const agentsData: AgentItem[] = await agentsRes.json()
+      const casesData: CaseItem[] = casesResult.status === 'fulfilled' ? casesResult.value : []
+      const agentsData: AgentItem[] = agentsResult.status === 'fulfilled' ? agentsResult.value : fallbackAgents
 
       setLeads(leadsData)
       setCases(casesData)
       setAgents(agentsData)
+
+      if (casesResult.status === 'rejected' || agentsResult.status === 'rejected') {
+        setError('Los leads ya cargan. Casos y estado de agentes siguen pendientes del backend público.')
+      }
       setSelectedLeadId((current) => current ?? leadsData[0]?.id ?? null)
       setSelectedCaseId((current) => current || casesData[0]?.id || '')
     } catch (err) {
