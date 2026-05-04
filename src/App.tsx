@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import './App.css'
-import { API_BASE, fallbackAgents, navigation, phases } from './data'
+import { API_BASE, SUPABASE_ANON_KEY, SUPABASE_URL, fallbackAgents, navigation, phases } from './data'
 import type { AgentItem, CaseItem, CasePhase, LeadItem, NavigationKey } from './types'
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 function App() {
   const [activeView, setActiveView] = useState<NavigationKey>('panel')
@@ -20,9 +23,9 @@ function App() {
     setError('')
 
     try {
-      const leadsRes = await fetch(`${API_BASE}/leads`)
-      if (!leadsRes.ok) throw new Error('No se pudieron cargar los leads reales')
-      const leadsData: LeadItem[] = await leadsRes.json()
+      const leadsResult = await supabase.from('leads').select('*').order('fecha', { ascending: false })
+      if (leadsResult.error) throw new Error(`No se pudieron cargar los leads reales: ${leadsResult.error.message}`)
+      const leadsData: LeadItem[] = (leadsResult.data as LeadItem[]) ?? []
 
       const [casesResult, agentsResult] = await Promise.allSettled([
         fetch(`${API_BASE}/cases`).then(async (response) => {
@@ -143,7 +146,7 @@ function App() {
         <section className="sidebar-card">
           <p className="eyebrow">Sin mock</p>
           <h3>Origen de datos</h3>
-          <p className="muted">El Center está leyendo desde {API_BASE}.</p>
+          <p className="muted">El Center está leyendo los leads directamente desde Supabase.</p>
           <div className="stack-sm">
             <button className="primary-btn" onClick={() => void loadData()}>Recargar datos</button>
           </div>
