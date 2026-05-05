@@ -86,7 +86,10 @@ textarea {
 .detail-block p,
 .detail-pair span,
 .metric-card p,
-.metric-card span {
+.metric-card span,
+.table-wrap td,
+.table-wrap th,
+.notice {
   color: #98a3b8;
 }
 
@@ -144,7 +147,8 @@ textarea {
 .phase-detail-card,
 .agent-card,
 .modal-card,
-.case-row {
+.case-row,
+.notice {
   background: rgba(17, 24, 36, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
@@ -152,7 +156,8 @@ textarea {
 
 .sidebar-card,
 .panel-card,
-.modal-card {
+.modal-card,
+.notice {
   padding: 22px;
   border-radius: 24px;
 }
@@ -222,8 +227,9 @@ textarea {
   color: #e6ebf5;
 }
 
-.hero-card {
-  align-items: flex-end;
+.compact-btn {
+  padding: 8px 12px;
+  font-size: 0.85rem;
 }
 
 .metrics-grid,
@@ -396,49 +402,39 @@ textarea {
   color: #d9dfeb;
 }
 
-.flash-banner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.table-wrap {
+  overflow: auto;
+}
+
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.table-wrap tbody tr:hover,
+.click-row {
+  cursor: pointer;
+}
+
+.notice {
   margin-bottom: 20px;
 }
 
-.flash-banner strong,
-.output-card strong {
-  color: #f5f7fb;
+.notice.error {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fecaca;
 }
 
-.flash-banner p {
-  margin: 0;
-  flex: 1;
-}
-
-.flash-banner.success {
-  border-color: rgba(74, 222, 128, 0.28);
-}
-
-.flash-banner.error {
-  border-color: rgba(248, 113, 113, 0.3);
-}
-
-.output-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 18px;
-  padding: 16px;
-}
-
-.output-content {
-  margin: 12px 0 0;
-  white-space: pre-wrap;
-  font: inherit;
-  color: #dbe2ef;
-}
-
-.primary-btn:disabled,
-.ghost-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
+.top-gap {
+  margin-top: 20px;
 }
 
 .modal-overlay {
@@ -452,62 +448,6 @@ textarea {
 
 .modal-card {
   width: min(880px, 100%);
-}
-
-.notice {
-  margin-bottom: 20px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #dbe2ef;
-}
-
-.notice.error {
-  background: rgba(146, 41, 41, 0.18);
-  border-color: rgba(255, 120, 120, 0.24);
-  color: #ffd7d7;
-}
-
-.table-wrap {
-  overflow: auto;
-  border-radius: 18px;
-}
-
-.table-wrap table {
-  width: 100%;
-  min-width: 860px;
-  border-collapse: collapse;
-}
-
-.table-wrap th,
-.table-wrap td {
-  text-align: left;
-  padding: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  vertical-align: top;
-}
-
-.table-wrap th {
-  color: #dbe2ef;
-  font-size: 0.84rem;
-}
-
-.click-row {
-  cursor: pointer;
-}
-
-.click-row:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.compact-btn {
-  padding: 8px 12px;
-  border-radius: 12px;
-}
-
-.top-gap {
-  margin-top: 20px;
 }
 
 @media (max-width: 1200px) {
