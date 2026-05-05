@@ -396,6 +396,51 @@ textarea {
   color: #d9dfeb;
 }
 
+.flash-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.flash-banner strong,
+.output-card strong {
+  color: #f5f7fb;
+}
+
+.flash-banner p {
+  margin: 0;
+  flex: 1;
+}
+
+.flash-banner.success {
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+.flash-banner.error {
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.output-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.output-content {
+  margin: 12px 0 0;
+  white-space: pre-wrap;
+  font: inherit;
+  color: #dbe2ef;
+}
+
+.primary-btn:disabled,
+.ghost-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

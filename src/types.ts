@@ -21,6 +21,25 @@ export interface HistoryEvent {
   time: string
 }
 
+export interface AgentOutputItem {
+  id: string
+  agentKey: 'agent1' | 'agent2' | string
+  agentName: string
+  title: string
+  content: string
+  createdAt: string
+}
+
+export interface AgentRunItem {
+  id: string
+  agentKey: 'agent1' | 'agent2' | string
+  agentName: string
+  status: 'running' | 'completed' | 'failed' | string
+  startedAt: string
+  completedAt?: string
+  error?: string
+}
+
 export interface CaseItem {
   id: string
   leadId?: number
@@ -38,6 +57,8 @@ export interface CaseItem {
   blocker: string
   status: CaseStatus
   documents: string[]
+  outputs: AgentOutputItem[]
+  runs: AgentRunItem[]
   checklist: ChecklistItem[]
   history: HistoryEvent[]
 }

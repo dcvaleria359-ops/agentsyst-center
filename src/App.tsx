@@ -1,78 +1,79 @@
-import { useEffect, useMemo, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import './App.css'
-import { API_BASE, SUPABASE_ANON_KEY, SUPABASE_URL, fallbackAgents, navigation, phases } from './data'
-import type { AgentItem, CaseItem, CasePhase, LeadItem, NavigationKey } from './types'
+import { API_BASE, fallbackAgents, navigation, phases } from './data'
+import type { AgentItem, AgentOutputItem, CaseItem, CasePhase, NavigationKey, Priority } from './types'
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+type DraftCase = {
+  company: string
+  website: string
+  sector: string
+  origin: string
+  request: string
+  priority: Priority
+  notes: string
+}
+
+type FlashMessage = { type: 'success' | 'error'; text: string } | null
+
+type AgentAction = {
+  key: 'agent1' | 'agent2'
+  label: string
+  helper: string
+}
+
+const initialDraft: DraftCase = {
+  company: '',
+  website: '',
+  sector: '',
+  origin: 'Creación manual desde panel',
+  request: '',
+  priority: 'Media',
+  notes: '',
+}
+
+function apiUrl(path: string) {
+  return `${API_BASE}${path}`
+}
+
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(apiUrl(path), {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers || {}),
+    },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data?.details || data?.error || 'La petición falló')
+  }
+  return data as T
+}
 
 function App() {
   const [activeView, setActiveView] = useState<NavigationKey>('panel')
-  const [leads, setLeads] = useState<LeadItem[]>([])
   const [cases, setCases] = useState<CaseItem[]>([])
-  const [agents, setAgents] = useState<AgentItem[]>(fallbackAgents)
-  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null)
   const [selectedCaseId, setSelectedCaseId] = useState('')
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [draft, setDraft] = useState<DraftCase>(initialDraft)
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [busyLeadId, setBusyLeadId] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isCreating, setIsCreating] = useState(false)
+  const [runningAgentKey, setRunningAgentKey] = useState<string | null>(null)
+  const [flash, setFlash] = useState<FlashMessage>(null)
 
-  const loadData = async () => {
-    setLoading(true)
-    setError('')
-
-    try {
-      const leadsResult = await supabase.from('leads').select('*').order('fecha', { ascending: false })
-      if (leadsResult.error) throw new Error(`No se pudieron cargar los leads reales: ${leadsResult.error.message}`)
-      const leadsData: LeadItem[] = (leadsResult.data as LeadItem[]) ?? []
-
-      const [casesResult, agentsResult] = await Promise.allSettled([
-        fetch(`${API_BASE}/cases`).then(async (response) => {
-          if (!response.ok) throw new Error('cases_unavailable')
-          return response.json() as Promise<CaseItem[]>
-        }),
-        fetch(`${API_BASE}/agents/status`).then(async (response) => {
-          if (!response.ok) throw new Error('agents_unavailable')
-          return response.json() as Promise<AgentItem[]>
-        }),
-      ])
-
-      const casesData: CaseItem[] = casesResult.status === 'fulfilled' ? casesResult.value : []
-      const agentsData: AgentItem[] = agentsResult.status === 'fulfilled' ? agentsResult.value : fallbackAgents
-
-      setLeads(leadsData)
-      setCases(casesData)
-      setAgents(agentsData)
-
-      if (casesResult.status === 'rejected' || agentsResult.status === 'rejected') {
-        setError('Los leads ya cargan. Casos y estado de agentes siguen pendientes del backend público.')
-      }
-      setSelectedLeadId((current) => current ?? leadsData[0]?.id ?? null)
-      setSelectedCaseId((current) => current || casesData[0]?.id || '')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error cargando datos reales')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    void loadData()
-  }, [])
-
-  const caseLeadIds = useMemo(() => new Set<number>(cases.flatMap((item) => (typeof item.leadId === 'number' ? [item.leadId] : []))), [cases])
-
-  const filteredLeads = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    if (!term) return leads
-    return leads.filter((item) =>
-      [item.id, item.nombre_negocio, item.nombre_contacto, item.tipo_negocio, item.email, item.website, item.problema]
-        .join(' ')
-        .toLowerCase()
-        .includes(term),
-    )
-  }, [leads, search])
+  const agents: AgentItem[] = useMemo(
+    () => phases.map((phase, index) => ({
+      id: `AG-${String(index + 1).padStart(3, '0')}`,
+      name: phase.agent,
+      phase: phase.phase,
+      mission: phase.description,
+      output: phase.output,
+      status: index < 2 ? 'integrado en panel' : fallbackAgents[index - 1]?.status || 'pendiente',
+    })),
+    [],
+  )
 
   const filteredCases = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -82,44 +83,90 @@ function App() {
     )
   }, [cases, search])
 
-  const selectedLead = filteredLeads.find((item) => item.id === selectedLeadId) ?? leads.find((item) => item.id === selectedLeadId) ?? null
-  const selectedCase = filteredCases.find((item) => item.id === selectedCaseId) ?? cases.find((item) => item.id === selectedCaseId) ?? null
+  const selectedCase = useMemo(
+    () => filteredCases.find((item) => item.id === selectedCaseId) ?? cases.find((item) => item.id === selectedCaseId),
+    [cases, filteredCases, selectedCaseId],
+  )
 
   const phaseCounts = useMemo(
     () => phases.map((phase) => ({ ...phase, count: cases.filter((item) => item.currentPhase === phase.phase).length })),
     [cases],
   )
 
-  const currentCasesLabel = `${cases.length} caso${cases.length === 1 ? '' : 's'} activos`
+  useEffect(() => {
+    void loadCases()
+  }, [])
 
-  const handleConvertLead = async (leadId: number) => {
-    setBusyLeadId(leadId)
-    setError('')
-
+  async function loadCases(keepSelection = true) {
     try {
-      const response = await fetch(`${API_BASE}/cases`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: leadId }),
+      setIsLoading(true)
+      const payload = await requestJson<{ ok: true; cases: CaseItem[]; storage?: string }>('/cases')
+      setCases(payload.cases)
+      setSelectedCaseId((current) => {
+        if (keepSelection && current && payload.cases.some((item) => item.id === current)) return current
+        return payload.cases[0]?.id || ''
       })
-
-      if (!response.ok) throw new Error('No se pudo convertir el lead en caso')
-
-      const payload = await response.json()
-      const nextCase: CaseItem = payload.case
-
-      setCases((prev) => {
-        const withoutCurrent = prev.filter((item) => item.id !== nextCase.id)
-        return [nextCase, ...withoutCurrent]
-      })
-      setSelectedCaseId(nextCase.id)
-      setActiveView('casos')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo convertir el lead')
+      if (payload.storage === 'local_fallback') {
+        setFlash({ type: 'error', text: 'El panel funciona, pero el motor sigue guardando en fallback local porque faltan tablas reales en Supabase.' })
+      } else {
+        setFlash(null)
+      }
+    } catch (error) {
+      setFlash({ type: 'error', text: error instanceof Error ? error.message : 'No se pudieron cargar los casos.' })
     } finally {
-      setBusyLeadId(null)
+      setIsLoading(false)
     }
   }
+
+  async function handleCreateCase() {
+    if (!draft.company.trim() || !draft.sector.trim() || !draft.origin.trim() || !draft.request.trim()) return
+
+    try {
+      setIsCreating(true)
+      const payload = await requestJson<{ ok: true; case: CaseItem; storage?: string }>('/cases', {
+        method: 'POST',
+        body: JSON.stringify({
+          company: draft.company,
+          website: draft.website,
+          sector: draft.sector,
+          origin: draft.origin,
+          request: draft.request,
+          priority: draft.priority,
+          notes: draft.notes,
+        }),
+      })
+
+      setCases((prev) => [payload.case, ...prev.filter((item) => item.id !== payload.case.id)])
+      setSelectedCaseId(payload.case.id)
+      setDraft(initialDraft)
+      setIsCreateOpen(false)
+      setActiveView('casos')
+      setFlash({ type: 'success', text: `Caso ${payload.case.company} creado y listo para lanzar análisis.` })
+    } catch (error) {
+      setFlash({ type: 'error', text: error instanceof Error ? error.message : 'No se pudo crear el caso.' })
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  async function handleRunAgent(caseItem: CaseItem, agentKey: 'agent1' | 'agent2') {
+    try {
+      setRunningAgentKey(`${caseItem.id}:${agentKey}`)
+      const payload = await requestJson<{ ok: true; case: CaseItem }>(`/cases/${caseItem.id}/agents/${agentKey}/run`, {
+        method: 'POST',
+      })
+
+      setCases((prev) => prev.map((item) => (item.id === payload.case.id ? payload.case : item)))
+      setSelectedCaseId(payload.case.id)
+      setFlash({ type: 'success', text: `${agentKey === 'agent1' ? 'Agente 1' : 'Agente 2'} ejecutado y guardado en el caso.` })
+    } catch (error) {
+      setFlash({ type: 'error', text: error instanceof Error ? error.message : 'No se pudo ejecutar el agente.' })
+    } finally {
+      setRunningAgentKey(null)
+    }
+  }
+
+  const currentCasesLabel = `${cases.length} caso${cases.length === 1 ? '' : 's'} en el motor`
 
   return (
     <div className="app-shell">
@@ -128,27 +175,24 @@ function App() {
           <div className="brand-mark">A</div>
           <p className="eyebrow">AGENTSYST Center</p>
           <h1>Panel interno conectado</h1>
-          <p className="muted">Leads reales, casos reales y estado real del motor en una sola vista.</p>
+          <p className="muted">Aquí es donde debe vivir el flujo real. Agente 1 y 2 ya quedan integrados en este panel.</p>
         </div>
 
         <nav className="nav-list">
           {navigation.map((item) => (
-            <button
-              key={item.key}
-              className={`nav-item ${activeView === item.key ? 'active' : ''}`}
-              onClick={() => setActiveView(item.key)}
-            >
+            <button key={item.key} className={`nav-item ${activeView === item.key ? 'active' : ''}`} onClick={() => setActiveView(item.key)}>
               {item.label}
             </button>
           ))}
         </nav>
 
         <section className="sidebar-card">
-          <p className="eyebrow">Sin mock</p>
-          <h3>Origen de datos</h3>
-          <p className="muted">El Center está leyendo los leads directamente desde Supabase.</p>
+          <p className="eyebrow">Entrada obligatoria</p>
+          <h3>Nuevo caso</h3>
+          <p className="muted">Crea caso real, ejecuta agente 1, luego agente 2, y deja agente 3 listo.</p>
           <div className="stack-sm">
-            <button className="primary-btn" onClick={() => void loadData()}>Recargar datos</button>
+            <button className="primary-btn" onClick={() => setIsCreateOpen(true)}>Crear caso</button>
+            <button className="ghost-btn" type="button" onClick={() => void loadCases(false)}>Recargar casos</button>
           </div>
         </section>
       </aside>
@@ -160,25 +204,31 @@ function App() {
             <h2>{activeView === 'panel' ? 'Visión general' : navigation.find((item) => item.key === activeView)?.label}</h2>
           </div>
           <div className="topbar-actions">
-            <input
-              className="search"
-              placeholder="Buscar por lead, empresa, email, caso o fase"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <button className="ghost-btn" onClick={() => void loadData()}>Actualizar</button>
+            <input className="search" placeholder="Buscar por empresa, caso, origen o fase" value={search} onChange={(event) => setSearch(event.target.value)} />
+            <button className="ghost-btn" onClick={() => void loadCases(false)}>Actualizar</button>
           </div>
         </header>
 
-        {error && <div className="notice error">{error}</div>}
-        {loading && <div className="notice">Cargando datos reales…</div>}
+        {flash && <FlashBanner flash={flash} onClose={() => setFlash(null)} />}
 
-        {activeView === 'panel' && !loading && (
+        {activeView === 'panel' && (
           <div className="stack-lg">
+            <section className="hero-card panel-card">
+              <div>
+                <p className="eyebrow">Estado del motor</p>
+                <h3>Flujo real mínimo activo en este panel</h3>
+                <p className="muted">Crear caso → lanzar análisis → generar soluciones propuestas → dejar agente 3 habilitado.</p>
+              </div>
+              <div className="hero-actions">
+                <button className="primary-btn" onClick={() => setIsCreateOpen(true)}>Crear caso</button>
+                <button className="ghost-btn" type="button" onClick={() => void loadCases(false)}>Recargar</button>
+              </div>
+            </section>
+
             <section className="metrics-grid">
-              <MetricCard label="Leads reales" value={String(leads.length)} detail="Entradas desde backend" />
-              <MetricCard label="Casos activos" value={currentCasesLabel} detail="Leads ya convertidos al motor" />
-              <MetricCard label="Agentes operativos" value={`${agents.filter((item) => item.installed).length}/6`} detail="Estado real detectado en OpenClaw" />
+              <MetricCard label="Estado del motor" value={currentCasesLabel} detail={isLoading ? 'Cargando...' : 'Casos reales del panel'} />
+              <MetricCard label="Bloqueos" value={String(cases.filter((item) => item.status === 'Bloqueado').length)} detail="Casos que requieren decisión" />
+              <MetricCard label="Fase actual más poblada" value={getTopPhase(phaseCounts)} detail="Carga operativa actual" />
             </section>
 
             <section className="panel-card stack-md">
@@ -190,47 +240,52 @@ function App() {
               </div>
               <PhaseBoard phases={phaseCounts} />
             </section>
-
-            <section className="panel-card stack-md">
-              <div className="panel-head">
-                <div>
-                  <p className="eyebrow">Entrada de captación</p>
-                  <h3>Últimos leads reales</h3>
-                </div>
-              </div>
-              <LeadTable leads={filteredLeads.slice(0, 5)} activeCaseLeadIds={caseLeadIds} busyLeadId={busyLeadId} onSelect={setSelectedLeadId} onConvert={handleConvertLead} />
-            </section>
           </div>
         )}
 
-        {activeView === 'casos' && !loading && (
+        {activeView === 'casos' && (
           <div className="cases-layout">
             <section className="panel-card stack-md">
               <div className="panel-head">
                 <div>
-                  <p className="eyebrow">Leads reales</p>
-                  <h3>Convertir en caso</h3>
+                  <p className="eyebrow">Casos</p>
+                  <h3>Vista operativa</h3>
                 </div>
               </div>
-              {filteredLeads.length === 0 ? (
-                <EmptyState title="No hay leads reales todavía" body="Cuando el backend reciba leads del formulario, aparecerán aquí." />
+              {isLoading ? (
+                <LoadingState />
+              ) : filteredCases.length === 0 ? (
+                <EmptyState onCreate={() => setIsCreateOpen(true)} />
               ) : (
-                <LeadTable leads={filteredLeads} activeCaseLeadIds={caseLeadIds} busyLeadId={busyLeadId} onSelect={setSelectedLeadId} onConvert={handleConvertLead} />
+                <div className="case-list">
+                  {filteredCases.map((item) => (
+                    <button key={item.id} className={`case-row ${selectedCase?.id === item.id ? 'active' : ''}`} onClick={() => setSelectedCaseId(item.id)}>
+                      <div>
+                        <strong>{item.company}</strong>
+                        <p>{item.id.slice(0, 8)} · {item.sector}</p>
+                      </div>
+                      <div className="case-row-meta">
+                        <span className="pill">{item.currentPhase}</span>
+                        <span className="pill subtle">{item.currentAgent}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               )}
             </section>
 
             <section className="panel-card stack-md">
-              {selectedLead ? <LeadDetail lead={selectedLead} alreadyCase={caseLeadIds.has(selectedLead.id)} onConvert={handleConvertLead} busy={busyLeadId === selectedLead.id} /> : <EmptyState title="Selecciona un lead" body="Aquí verás la ficha del lead y la acción para convertirlo en caso." />}
+              {selectedCase ? <CaseDetail item={selectedCase} runningAgentKey={runningAgentKey} onRunAgent={handleRunAgent} /> : <EmptyDetail />}
             </section>
           </div>
         )}
 
-        {activeView === 'fases' && !loading && (
+        {activeView === 'fases' && (
           <section className="panel-card stack-md">
             <div className="panel-head">
               <div>
-                <p className="eyebrow">Casos activos</p>
-                <h3>Motor en tiempo real</h3>
+                <p className="eyebrow">Fases</p>
+                <h3>Qué ocurre en cada tramo</h3>
               </div>
             </div>
             <div className="phase-detail-list">
@@ -253,12 +308,12 @@ function App() {
           </section>
         )}
 
-        {activeView === 'agentes' && !loading && (
+        {activeView === 'agentes' && (
           <section className="panel-card stack-md">
             <div className="panel-head">
               <div>
-                <p className="eyebrow">OpenClaw</p>
-                <h3>Estado real de los 6 agentes</h3>
+                <p className="eyebrow">Agentes obreros oficiales</p>
+                <h3>Responsables del flujo v1</h3>
               </div>
             </div>
             <div className="agent-grid">
@@ -268,20 +323,27 @@ function App() {
                   <h4>{agent.name}</h4>
                   <p>{agent.mission}</p>
                   <DetailPair label="Output" value={agent.output} />
-                  <DetailPair label="Slug" value={agent.slug ?? 'sin slug'} />
-                  <DetailPair label="Estado" value={agent.status ?? 'sin estado'} />
+                  <DetailPair label="Estado" value={agent.status || 'pendiente'} />
                 </article>
               ))}
             </div>
           </section>
         )}
-
-        {activeView === 'casos' && selectedCase && (
-          <section className="panel-card stack-md top-gap">
-            <CaseDetail item={selectedCase} />
-          </section>
-        )}
       </main>
+
+      {isCreateOpen && (
+        <CreateCaseModal draft={draft} isSubmitting={isCreating} onChange={setDraft} onClose={() => setIsCreateOpen(false)} onSubmit={() => void handleCreateCase()} />
+      )}
+    </div>
+  )
+}
+
+function FlashBanner({ flash, onClose }: { flash: NonNullable<FlashMessage>; onClose: () => void }) {
+  return (
+    <div className={`panel-card flash-banner ${flash.type}`}>
+      <strong>{flash.type === 'success' ? 'Hecho' : 'Atención'}</strong>
+      <p>{flash.text}</p>
+      <button className="ghost-btn" onClick={onClose}>Cerrar</button>
     </div>
   )
 }
@@ -313,112 +375,16 @@ function PhaseBoard({ phases }: { phases: Array<{ phase: CasePhase; agent: strin
   )
 }
 
-function LeadTable({
-  leads,
-  activeCaseLeadIds,
-  busyLeadId,
-  onSelect,
-  onConvert,
-}: {
-  leads: LeadItem[]
-  activeCaseLeadIds: Set<number>
-  busyLeadId: number | null
-  onSelect: (id: number) => void
-  onConvert: (id: number) => void
-}) {
-  return (
-    <div className="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Lead</th>
-            <th>Contacto</th>
-            <th>Sector</th>
-            <th>Problema</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leads.map((lead) => {
-            const alreadyCase = activeCaseLeadIds.has(lead.id)
-            return (
-              <tr key={lead.id} onClick={() => onSelect(lead.id)} className="click-row">
-                <td>
-                  <strong>{lead.nombre_negocio || 'Sin negocio'}</strong>
-                  <p>#{lead.id}</p>
-                </td>
-                <td>{lead.nombre_contacto || lead.email || 'Sin contacto'}</td>
-                <td>{lead.tipo_negocio || 'Sin sector'}</td>
-                <td>{lead.problema || 'Sin problema detectado'}</td>
-                <td>{alreadyCase ? 'En motor' : 'Pendiente'}</td>
-                <td>
-                  <button
-                    className="primary-btn compact-btn"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      if (!alreadyCase) onConvert(lead.id)
-                    }}
-                    disabled={alreadyCase || busyLeadId === lead.id}
-                  >
-                    {alreadyCase ? 'Caso activo' : busyLeadId === lead.id ? 'Convirtiendo…' : 'Convertir en caso'}
-                  </button>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-  )
-}
+function CaseDetail({ item, runningAgentKey, onRunAgent }: { item: CaseItem; runningAgentKey: string | null; onRunAgent: (item: CaseItem, agentKey: 'agent1' | 'agent2') => void }) {
+  const action = getAgentAction(item)
+  const isRunning = action ? runningAgentKey === `${item.id}:${action.key}` : false
 
-function LeadDetail({ lead, alreadyCase, onConvert, busy }: { lead: LeadItem; alreadyCase: boolean; onConvert: (id: number) => void; busy: boolean }) {
   return (
     <>
       <div className="panel-head">
         <div>
-          <p className="eyebrow">Ficha del lead</p>
-          <h3>{lead.nombre_negocio || 'Sin negocio'} · #{lead.id}</h3>
-        </div>
-        <span className="pill">{alreadyCase ? 'En motor' : 'Pendiente'}</span>
-      </div>
-
-      <div className="detail-grid">
-        <DetailPair label="Contacto" value={lead.nombre_contacto || 'No informado'} />
-        <DetailPair label="Sector" value={lead.tipo_negocio || 'No informado'} />
-        <DetailPair label="WhatsApp" value={lead.whatsapp || 'No informado'} />
-        <DetailPair label="Email" value={lead.email || 'No informado'} />
-        <DetailPair label="Web" value={lead.website || 'No informada'} />
-        <DetailPair label="Instagram" value={lead.instagram || 'No informado'} />
-        <DetailPair label="Fecha" value={formatDate(lead.fecha)} />
-        <DetailPair label="GDPR" value={lead.gdpr_aceptado ? 'Aceptado' : 'No'} />
-      </div>
-
-      <article className="detail-block">
-        <strong>Problema detectado</strong>
-        <p>{lead.problema || 'Sin texto de problema todavía.'}</p>
-      </article>
-
-      <article className="detail-block">
-        <strong>Notas</strong>
-        <p>{lead.notas || 'Sin notas adicionales.'}</p>
-      </article>
-
-      <button className="primary-btn" disabled={alreadyCase || busy} onClick={() => onConvert(lead.id)}>
-        {alreadyCase ? 'Este lead ya es un caso activo' : busy ? 'Convirtiendo…' : 'Convertir en caso'}
-      </button>
-    </>
-  )
-}
-
-function CaseDetail({ item }: { item: CaseItem }) {
-  return (
-    <>
-      <div className="panel-head">
-        <div>
-          <p className="eyebrow">Caso activo</p>
-          <h3>{item.id} · {item.company}</h3>
+          <p className="eyebrow">Ficha de caso</p>
+          <h3>{item.company}</h3>
         </div>
         <span className="pill">{item.currentPhase}</span>
       </div>
@@ -435,8 +401,10 @@ function CaseDetail({ item }: { item: CaseItem }) {
         <DetailPair label="Bloqueos" value={item.blocker} />
       </div>
 
+      <AgentActionCard item={item} action={action} isRunning={isRunning} onRunAgent={onRunAgent} />
+
       <article className="detail-block">
-        <strong>Necesidad</strong>
+        <strong>Petición o necesidad</strong>
         <p>{item.request}</p>
       </article>
 
@@ -444,7 +412,63 @@ function CaseDetail({ item }: { item: CaseItem }) {
         <strong>Notas</strong>
         <p>{item.notes || 'Sin notas adicionales todavía.'}</p>
       </article>
+
+      <div className="detail-split">
+        <article className="detail-block">
+          <strong>Documentos o resultados</strong>
+          <ul>{item.documents.map((doc) => <li key={doc}>{doc}</li>)}</ul>
+        </article>
+        <article className="detail-block">
+          <strong>Checklist</strong>
+          <ul>{item.checklist.map((check) => <li key={check.label}>{check.done ? '✓' : '•'} {check.label}</li>)}</ul>
+        </article>
+      </div>
+
+      <article className="detail-block">
+        <strong>Outputs de agentes</strong>
+        {item.outputs.length === 0 ? <p>Todavía no hay outputs guardados.</p> : <OutputList outputs={item.outputs} />}
+      </article>
+
+      <article className="detail-block">
+        <strong>Historial</strong>
+        <ul>{item.history.map((event) => <li key={`${event.label}-${event.time}`}>{event.label} · {event.time}</li>)}</ul>
+      </article>
     </>
+  )
+}
+
+function AgentActionCard({ item, action, isRunning, onRunAgent }: { item: CaseItem; action: AgentAction | null; isRunning: boolean; onRunAgent: (item: CaseItem, agentKey: 'agent1' | 'agent2') => void }) {
+  return (
+    <article className="detail-block">
+      <strong>Acción operativa</strong>
+      {action ? (
+        <div className="stack-sm">
+          <p>{action.helper}</p>
+          <button className="primary-btn" disabled={isRunning} onClick={() => onRunAgent(item, action.key)}>{isRunning ? 'Ejecutando…' : action.label}</button>
+        </div>
+      ) : (
+        <p>Este caso ya dejó preparado el siguiente handoff. El agente 3 queda como siguiente integración pendiente.</p>
+      )}
+    </article>
+  )
+}
+
+function OutputList({ outputs }: { outputs: AgentOutputItem[] }) {
+  return (
+    <div className="stack-sm">
+      {[...outputs].reverse().map((output) => (
+        <article key={output.id} className="output-card">
+          <div className="phase-detail-top">
+            <div>
+              <strong>{output.title}</strong>
+              <p>{output.agentName}</p>
+            </div>
+            <span className="count-badge">{new Date(output.createdAt).toLocaleDateString('es-ES')}</span>
+          </div>
+          <pre className="output-content">{output.content}</pre>
+        </article>
+      ))}
+    </div>
   )
 }
 
@@ -457,20 +481,89 @@ function DetailPair({ label, value }: { label: string; value: string }) {
   )
 }
 
-function EmptyState({ title, body }: { title: string; body: string }) {
+function LoadingState() {
   return (
     <div className="empty-state">
-      <p className="eyebrow">Sin datos</p>
-      <h3>{title}</h3>
-      <p>{body}</p>
+      <p className="eyebrow">Cargando</p>
+      <h3>Trayendo casos reales</h3>
+      <p>Esperando respuesta del backend de AGENTSYST.</p>
     </div>
   )
 }
 
-function formatDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+function EmptyState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="empty-state">
+      <p className="eyebrow">Motor listo</p>
+      <h3>No hay casos todavía</h3>
+      <p>El flujo real arranca aquí: crea un caso y luego lanza el agente 1 desde la ficha.</p>
+      <button className="primary-btn" onClick={onCreate}>Crear primer caso</button>
+    </div>
+  )
+}
+
+function EmptyDetail() {
+  return (
+    <div className="empty-detail">
+      <p className="eyebrow">Ficha de caso</p>
+      <h3>Selecciona un caso</h3>
+      <p>Cuando exista al menos un caso, aquí verás fase actual, responsable, output esperado y acciones reales.</p>
+    </div>
+  )
+}
+
+function CreateCaseModal({ draft, isSubmitting, onChange, onClose, onSubmit }: { draft: DraftCase; isSubmitting: boolean; onChange: (draft: DraftCase) => void; onClose: () => void; onSubmit: () => void }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+        <div className="panel-head">
+          <div>
+            <p className="eyebrow">Nuevo caso</p>
+            <h3>Entrada al motor</h3>
+          </div>
+          <button className="ghost-btn" onClick={onClose}>Cerrar</button>
+        </div>
+
+        <div className="form-grid">
+          <Field label="Empresa"><input value={draft.company} onChange={(e) => onChange({ ...draft, company: e.target.value })} placeholder="Ej. Clínica Nova" /></Field>
+          <Field label="Web"><input value={draft.website} onChange={(e) => onChange({ ...draft, website: e.target.value })} placeholder="https://..." /></Field>
+          <Field label="Sector"><input value={draft.sector} onChange={(e) => onChange({ ...draft, sector: e.target.value })} placeholder="Ej. Clínica dental" /></Field>
+          <Field label="Origen"><input value={draft.origin} onChange={(e) => onChange({ ...draft, origin: e.target.value })} placeholder="Web / captación / manual" /></Field>
+          <Field label="Prioridad">
+            <select value={draft.priority} onChange={(e) => onChange({ ...draft, priority: e.target.value as Priority })}>
+              <option>Alta</option><option>Media</option><option>Baja</option>
+            </select>
+          </Field>
+          <Field label="Petición o necesidad" full><textarea value={draft.request} onChange={(e) => onChange({ ...draft, request: e.target.value })} rows={4} placeholder="Qué necesita este negocio o qué oportunidad detectamos..." /></Field>
+          <Field label="Notas" full><textarea value={draft.notes} onChange={(e) => onChange({ ...draft, notes: e.target.value })} rows={3} placeholder="Contexto adicional, contacto, matices..." /></Field>
+        </div>
+
+        <div className="modal-actions">
+          <button className="primary-btn" disabled={isSubmitting} onClick={onSubmit}>{isSubmitting ? 'Creando…' : 'Crear caso'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Field({ label, full, children }: { label: string; full?: boolean; children: ReactNode }) {
+  return (
+    <label className={`field ${full ? 'full' : ''}`}>
+      <span>{label}</span>
+      {children}
+    </label>
+  )
+}
+
+function getTopPhase(phasesWithCount: Array<{ phase: CasePhase; count: number }>) {
+  const top = phasesWithCount.reduce((best, item) => (item.count > best.count ? item : best), phasesWithCount[0])
+  return top.count === 0 ? 'Sin casos aún' : top.phase
+}
+
+function getAgentAction(item: CaseItem): AgentAction | null {
+  if (item.currentPhase === 'Nuevo caso') return { key: 'agent1', label: 'Lanzar análisis', helper: 'Ejecuta el agente 1, guarda el informe y habilita soluciones propuestas.' }
+  if (item.currentPhase === 'Soluciones propuestas') return { key: 'agent2', label: 'Generar soluciones propuestas', helper: 'Ejecuta el agente 2, guarda el briefing y deja listo el agente 3.' }
+  return null
 }
 
 export default App
