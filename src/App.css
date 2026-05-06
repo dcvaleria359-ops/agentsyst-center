@@ -433,6 +433,54 @@ textarea {
   color: #fecaca;
 }
 
+.agent-ops-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 4px;
+}
+
+.agent-ops-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.agent-ops-note {
+  margin-top: 6px;
+  font-size: 0.82rem;
+}
+
+.analyst-report-meta {
+  margin: 0 0 6px;
+}
+
+.analyst-report-title {
+  color: #f4f6fb;
+}
+
+.analyst-report-date {
+  margin-left: 10px;
+  font-size: 0.82rem;
+}
+
+.analyst-report-content {
+  margin: 10px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #dbe2ef;
+}
+
+.website-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  text-decoration: none;
+}
+
 .top-gap {
   margin-top: 20px;
 }

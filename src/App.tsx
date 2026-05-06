@@ -17,6 +17,21 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busyLeadId, setBusyLeadId] = useState<number | null>(null)
+  const [runningAgent1CaseId, setRunningAgent1CaseId] = useState<string | null>(null)
+
+  const handleRunAgent1 = async (caseId: string) => {
+    setRunningAgent1CaseId(caseId)
+    setError('')
+    try {
+      const response = await fetch(`${API_BASE}/cases/${caseId}/run-agent-1`, { method: 'POST' })
+      if (!response.ok) throw new Error('No se pudo ejecutar el analista')
+      await loadData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error ejecutando el analista')
+    } finally {
+      setRunningAgent1CaseId(null)
+    }
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -278,7 +293,11 @@ function App() {
 
         {activeView === 'casos' && selectedCase && (
           <section className="panel-card stack-md top-gap">
-            <CaseDetail item={selectedCase} />
+            <CaseDetail
+              item={selectedCase}
+              isRunningAgent1={runningAgent1CaseId === selectedCase.id}
+              onRunAgent1={() => void handleRunAgent1(selectedCase.id)}
+            />
           </section>
         )}
       </main>
@@ -412,7 +431,28 @@ function LeadDetail({ lead, alreadyCase, onConvert, busy }: { lead: LeadItem; al
   )
 }
 
-function CaseDetail({ item }: { item: CaseItem }) {
+function CaseDetail({ item, isRunningAgent1, onRunAgent1 }: { item: CaseItem; isRunningAgent1: boolean; onRunAgent1: () => void }) {
+  const analystOutput = item.outputs
+    ?.filter((output) => output.agentKey === 'agent1' || output.agentName?.toLowerCase().includes('analista'))
+    ?.at(-1)
+
+  const hasContent = Boolean(analystOutput?.content && analystOutput.content.trim().length > 0)
+
+  const runButtonLabel = isRunningAgent1
+    ? 'Ejecutando análisis…'
+    : analystOutput
+      ? 'Re-ejecutar análisis'
+      : 'Ejecutar análisis'
+
+  const handleCopyReport = async () => {
+    if (!analystOutput?.content) return
+    try {
+      await navigator.clipboard.writeText(analystOutput.content)
+    } catch {
+      /* silencioso: si el navegador bloquea, no rompemos la UI */
+    }
+  }
+
   return (
     <>
       <div className="panel-head">
@@ -435,6 +475,17 @@ function CaseDetail({ item }: { item: CaseItem }) {
         <DetailPair label="Bloqueos" value={item.blocker} />
       </div>
 
+      {item.website && (
+        <a
+          className="ghost-btn website-link"
+          href={item.website.startsWith('http') ? item.website : `https://${item.website}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Abrir web del cliente
+        </a>
+      )}
+
       <article className="detail-block">
         <strong>Necesidad</strong>
         <p>{item.request}</p>
@@ -444,6 +495,44 @@ function CaseDetail({ item }: { item: CaseItem }) {
         <strong>Notas</strong>
         <p>{item.notes || 'Sin notas adicionales todavía.'}</p>
       </article>
+
+      {/* ── Zona operativa ── */}
+      <div className="agent-ops-zone">
+        <div className="agent-ops-actions">
+          <button className="primary-btn" disabled={isRunningAgent1} onClick={onRunAgent1}>
+            {runButtonLabel}
+          </button>
+          <button className="ghost-btn" disabled={!hasContent} onClick={() => void handleCopyReport()}>
+            Copiar informe
+          </button>
+        </div>
+
+        <article className="detail-block">
+          <strong>Informe del Analista</strong>
+          {analystOutput ? (
+            hasContent ? (
+              <>
+                <p className="analyst-report-meta">
+                  <strong className="analyst-report-title">{analystOutput.title}</strong>
+                  {analystOutput.createdAt && (
+                    <span className="muted analyst-report-date">{formatDate(analystOutput.createdAt)}</span>
+                  )}
+                </p>
+                <pre className="analyst-report-content">{analystOutput.content}</pre>
+              </>
+            ) : (
+              <p>El informe existe, pero no tiene contenido.</p>
+            )
+          ) : (
+            <p>No hay informe del analista todavía.</p>
+          )}
+        </article>
+
+        <div>
+          <button className="ghost-btn" disabled>Enviar a agentsyst-orquestador-soluciones</button>
+          <p className="muted agent-ops-note">Agente 2 pendiente de conexión.</p>
+        </div>
+      </div>
     </>
   )
 }
