@@ -1,2 +1,2 @@
 /api/leads http://72.62.238.12:3001/api/leads 200
-/api/* http://72.62.238.12:3002/api/:splat 200
+/api/* http://72.62.238.12:3001/api/:splat 200
