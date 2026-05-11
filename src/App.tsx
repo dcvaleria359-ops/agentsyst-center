@@ -132,8 +132,8 @@ function App() {
 
   const handleSaveCase = async (caseId: string, fields: Record<string, string>) => {
     setSavingCase(true)
-    const sanitized: Record<string, string | null> = Object.fromEntries(
-      Object.entries(fields).map(([k, v]) => [k, v.trim() === '' ? null : v.trim()]),
+    const sanitized: Record<string, string> = Object.fromEntries(
+      Object.entries(fields).map(([k, v]) => [k, v.trim()]),
     )
     try {
       const { error: updateError } = await supabase
