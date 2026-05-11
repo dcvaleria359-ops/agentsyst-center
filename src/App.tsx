@@ -88,15 +88,16 @@ function App() {
       const { data: newCase, error: insertError } = await supabase
         .from('client_cases')
         .insert({
-          lead_id: leadId,
-          company: lead.nombre_negocio ?? 'Sin nombre',
-          website: lead.website,
-          sector: lead.tipo_negocio,
-          origin: 'Formulario web',
-          request: lead.problema,
-          notes: lead.notas,
-          current_phase: 'Caso abierto',
+          lead_id:          leadId,
+          company:          lead.nombre_negocio  ?? '',
+          website:          lead.website         ?? '',
+          sector:           lead.tipo_negocio    ?? '',
+          origin:           'web',
+          request:          lead.problema        ?? '',
+          notes:            lead.notas           ?? '',
+          current_phase:    'Caso abierto',
           commercial_status: 'Nuevo',
+          next_step:        'Generar análisis global',
         })
         .select()
         .single()
