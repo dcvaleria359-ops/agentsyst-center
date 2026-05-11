@@ -161,10 +161,20 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ case_id: caseId }),
       })
-      if (!res.ok) {
-        const data = await res.json() as { error?: string }
-        throw new Error(data.error ?? `Error ${res.status}`)
+
+      const text = await res.text()
+      let data: { ok?: boolean; error?: string; details?: string }
+      try {
+        data = JSON.parse(text) as typeof data
+      } catch {
+        throw new Error(`Error ${res.status}: respuesta inesperada del servidor — ${text.slice(0, 200)}`)
       }
+
+      if (!data.ok) {
+        const detail = data.details ? ` (${data.details})` : ''
+        throw new Error((data.error ?? `Error ${res.status}`) + detail)
+      }
+
       const { data: fresh, error: fetchError } = await supabase
         .from('client_cases')
         .select('*')

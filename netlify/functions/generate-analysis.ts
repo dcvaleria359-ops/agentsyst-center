@@ -8,6 +8,15 @@ import {
 } from './lib/prompts'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const JSON_CT = { 'Content-Type': 'application/json' }
+
+function respond(status: number, body: Record<string, unknown>) {
+  return { statusCode: status, headers: JSON_CT, body: JSON.stringify(body) }
+}
+
+function fail(error: string, details = '', status = 500) {
+  return respond(status, { ok: false, error, details })
+}
 
 interface AIResponse {
   choices: Array<{ message: { content: string } }>
@@ -22,10 +31,7 @@ async function callModel(
 ): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model,
       messages: [
@@ -37,13 +43,21 @@ async function callModel(
     }),
   })
 
+  // Always read as text first — avoids crashing if OpenRouter returns HTML/plain-text errors
+  const rawText = await res.text()
+
   if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`${model} — ${res.status}: ${text.slice(0, 300)}`)
+    throw new Error(`${model} HTTP ${res.status}: ${rawText.slice(0, 400)}`)
   }
 
-  const result = (await res.json()) as AIResponse
-  const content = result.choices[0]?.message?.content ?? ''
+  let parsed: AIResponse
+  try {
+    parsed = JSON.parse(rawText) as AIResponse
+  } catch {
+    throw new Error(`${model} returned non-JSON: ${rawText.slice(0, 400)}`)
+  }
+
+  const content = parsed.choices?.[0]?.message?.content ?? ''
   if (!content) throw new Error(`Empty response from ${model}`)
   return content
 }
@@ -63,122 +77,111 @@ function extractOpportunities(briefing: string): string {
 }
 
 export const handler = async (event: { body: string | null; httpMethod: string }) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' }
-  }
-
-  const supabaseUrl        = process.env.SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const apiKey             = process.env.AI_API_KEY
-  const dataModel          = process.env.DATA_MODEL    ?? 'perplexity/sonar'
-  const analysisModel      = process.env.ANALYSIS_MODEL ?? 'deepseek/deepseek-r1'
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Supabase config missing' }) }
-  }
-  if (!apiKey) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'AI_API_KEY not configured' }) }
-  }
-
-  let caseId: string
+  // Top-level catch ensures we ALWAYS return valid JSON, even on unexpected crashes
   try {
-    const body = JSON.parse(event.body ?? '{}') as { case_id?: string }
-    caseId = (body.case_id ?? '').trim()
-    if (!caseId) throw new Error('case_id is required')
-  } catch (err) {
-    return { statusCode: 400, body: JSON.stringify({ error: (err as Error).message }) }
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-  const { data: caseData, error: fetchError } = await supabase
-    .from('client_cases')
-    .select('*')
-    .eq('id', caseId)
-    .single()
-
-  if (fetchError || !caseData) {
-    return {
-      statusCode: 404,
-      body: JSON.stringify({ error: fetchError?.message ?? 'Case not found' }),
+    if (event.httpMethod !== 'POST') {
+      return fail('Method not allowed', '', 405)
     }
-  }
 
-  const c = caseData as CaseInput
+    const supabaseUrl        = process.env.SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const apiKey             = process.env.AI_API_KEY
+    const dataModel          = process.env.DATA_MODEL     ?? 'perplexity/sonar'
+    const analysisModel      = process.env.ANALYSIS_MODEL ?? 'deepseek/deepseek-r1'
 
-  // ── Phase 1: Data Collector ─────────────────────────────────────────────────
-
-  let rawData: string
-  try {
-    rawData = await callModel(
-      dataModel,
-      apiKey,
-      buildDataCollectorSystemPrompt(),
-      buildDataCollectorUserMessage(c),
-      2048,
-    )
-  } catch (err) {
-    return {
-      statusCode: 502,
-      body: JSON.stringify({ error: `Data Collector: ${(err as Error).message}` }),
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return fail('Supabase config missing', 'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set')
     }
-  }
-
-  // ── Phase 2: Business Analyst ───────────────────────────────────────────────
-
-  let briefing: string
-  try {
-    briefing = await callModel(
-      analysisModel,
-      apiKey,
-      buildAnalystSystemPrompt(),
-      buildAnalystUserMessage(c, rawData),
-      4096,
-    )
-  } catch (err) {
-    return {
-      statusCode: 502,
-      body: JSON.stringify({ error: `Business Analyst: ${(err as Error).message}` }),
+    if (!apiKey) {
+      return fail('AI_API_KEY not configured', 'Set AI_API_KEY in Netlify environment variables')
     }
-  }
 
-  // ── Save to Supabase ────────────────────────────────────────────────────────
+    let caseId: string
+    try {
+      const body = JSON.parse(event.body ?? '{}') as { case_id?: string }
+      caseId = (body.case_id ?? '').trim()
+      if (!caseId) throw new Error('case_id is required')
+    } catch (e) {
+      return fail('Invalid request body', (e as Error).message, 400)
+    }
 
-  const now = new Date().toISOString()
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  const sources      = extractSources(rawData)
-  const opportunities = extractOpportunities(briefing)
+    const { data: caseData, error: fetchError } = await supabase
+      .from('client_cases')
+      .select('*')
+      .eq('id', caseId)
+      .single()
 
-  const { data: existing } = await supabase
-    .from('client_cases')
-    .select('history')
-    .eq('id', caseId)
-    .single()
+    if (fetchError || !caseData) {
+      return fail('Case not found', fetchError?.message ?? '', 404)
+    }
 
-  const historyEntry = `[${now.slice(0, 10)}] Análisis generado — Data Collector: ${dataModel} · Business Analyst: ${analysisModel}`
-  const history = [existing?.history, historyEntry].filter(Boolean).join('\n')
+    const c = caseData as CaseInput
 
-  const { error: updateError } = await supabase
-    .from('client_cases')
-    .update({
-      diagnosis:             briefing,
-      opportunities:         opportunities || null,
-      sources:               sources || null,
-      history,
-      current_phase:         'Diagnóstico realizado',
-      next_step:             'Generar solución propuesta',
-      analysis_generated_at: now,
-      updated_at:            now,
-    })
-    .eq('id', caseId)
+    // ── Phase 1: Data Collector ───────────────────────────────────────────────
 
-  if (updateError) {
-    return { statusCode: 500, body: JSON.stringify({ error: updateError.message }) }
-  }
+    let rawData: string
+    try {
+      rawData = await callModel(
+        dataModel, apiKey,
+        buildDataCollectorSystemPrompt(),
+        buildDataCollectorUserMessage(c),
+        2048,
+      )
+    } catch (e) {
+      return fail('Data Collector failed', (e as Error).message, 502)
+    }
 
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ briefing, generated_at: now }),
+    // ── Phase 2: Business Analyst ─────────────────────────────────────────────
+
+    let briefing: string
+    try {
+      briefing = await callModel(
+        analysisModel, apiKey,
+        buildAnalystSystemPrompt(),
+        buildAnalystUserMessage(c, rawData),
+        4096,
+      )
+    } catch (e) {
+      return fail('Business Analyst failed', (e as Error).message, 502)
+    }
+
+    // ── Save to Supabase ──────────────────────────────────────────────────────
+
+    const now = new Date().toISOString()
+    const sources       = extractSources(rawData)
+    const opportunities = extractOpportunities(briefing)
+
+    const { data: existing } = await supabase
+      .from('client_cases').select('history').eq('id', caseId).single()
+
+    const historyEntry = `[${now.slice(0, 10)}] Análisis — Data Collector: ${dataModel} · Analyst: ${analysisModel}`
+    const history = [existing?.history, historyEntry].filter(Boolean).join('\n')
+
+    const { data: updatedCase, error: updateError } = await supabase
+      .from('client_cases')
+      .update({
+        diagnosis:             briefing,
+        opportunities:         opportunities || null,
+        sources:               sources || null,
+        history,
+        current_phase:         'Diagnóstico realizado',
+        next_step:             'Generar solución propuesta',
+        analysis_generated_at: now,
+        updated_at:            now,
+      })
+      .eq('id', caseId)
+      .select()
+      .single()
+
+    if (updateError) {
+      return fail('Failed to save to Supabase', updateError.message)
+    }
+
+    return respond(200, { ok: true, case: updatedCase, diagnosis: briefing })
+
+  } catch (topErr) {
+    return fail('Unexpected server error', (topErr as Error).message)
   }
 }
