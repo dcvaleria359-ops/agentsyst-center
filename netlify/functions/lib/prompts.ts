@@ -52,8 +52,8 @@ BUSCA Y DOCUMENTA:
 - Cualquier otra presencia digital relevante
 
 REGLAS:
-- Solo incluir lo que hayas podido verificar con una búsqueda real.
-- Si no encuentras información sobre un canal, escribe "No encontrado".
+- Si el operador proporcionó una URL para un canal, visítala directamente y reporta su estado real: "Accesible", "No accesible" o "Contenido restringido". Nunca escribas "No encontrado" para un canal cuya URL fue explícitamente proporcionada.
+- Para canales sin URL proporcionada: busca si existe presencia pública. Si no encuentras nada, escribe "No encontrado".
 - No inferir. No suponer. No rellenar con datos genéricos del sector.
 - Incluir todas las URLs de las fuentes consultadas.
 
@@ -130,7 +130,7 @@ No eres un agente de ventas. No generas propuestas directamente. No inventas dat
 ## REGLAS DE CALIDAD
 
 1. Solo analizar datos proporcionados explícitamente. No inventar presencia online.
-2. Si una fuente no está disponible: marcarla como "No disponible — pendiente de revisar".
+2. Si el operador proporcionó una URL para un canal pero el Data Collector no pudo verificarla, escribir la URL y añadir "[URL conocida — no verificada]". Solo usar "No disponible" si el operador no facilitó ninguna fuente para ese canal y el Data Collector tampoco la encontró.
 3. Cada problema detectado debe poder justificarse con una observación concreta.
 4. Las recomendaciones deben estar directamente vinculadas a los problemas detectados.
 5. Máximo 3 soluciones prioritarias. El resto como opcionales.
@@ -326,10 +326,14 @@ export function buildAnalystUserMessage(c: CaseInput, rawData: string): string {
   const lines: string[] = [
     '## FICHA DEL CASO',
     `company: ${c.company}`,
-    `sector: ${c.sector ?? 'No especificado'}`,
-    `problem: ${c.request ?? 'No especificado'}`,
-    `website: ${c.website ?? 'No disponible'}`,
+    `sector: ${c.sector || 'No especificado'}`,
+    `problem: ${c.request || 'No especificado'}`,
+    `website: ${c.website || 'No proporcionado'}`,
+    `instagram: ${c.instagram || 'No proporcionado'}`,
+    `whatsapp: ${c.whatsapp || 'No proporcionado'}`,
+    `email: ${c.email || 'No proporcionado'}`,
   ]
+  if (c.contact_name) lines.push(`contact: ${c.contact_name}`)
   if (c.notes) lines.push(`notes: ${c.notes}`)
   lines.push('')
   lines.push('## DATOS RECOPILADOS POR EL DATA COLLECTOR')

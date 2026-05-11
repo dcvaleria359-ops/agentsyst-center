@@ -110,7 +110,7 @@ export const handler = async (event: { body: string | null; httpMethod: string }
 
     const c = caseData as CaseInput
 
-    console.log(`[generate-analysis] case fields — website:${!!c.website} notes:${!!c.notes} request:${!!c.request} sources:${!!c.sources}`)
+    console.log(`[generate-analysis] case fields — website:${!!c.website} instagram:${!!c.instagram} notes:${!!c.notes} request:${!!c.request}`)
 
     // ── Phase 1: Data Collector ───────────────────────────────────────────────
 

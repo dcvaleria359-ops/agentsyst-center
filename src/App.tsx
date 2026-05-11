@@ -594,6 +594,25 @@ function CaseDetail({
 }) {
   const currentIndex = PHASE_BAR.indexOf(item.current_phase)
 
+  const [phaseMsg, setPhaseMsg] = useState('')
+  useEffect(() => {
+    if (!analyzing) { setPhaseMsg(''); return }
+    setPhaseMsg('Fase 1 — Recopilando datos del negocio…')
+    const t1 = setTimeout(() => setPhaseMsg('Fase 2 — Generando diagnóstico…'), 18000)
+    const t2 = setTimeout(() => setPhaseMsg('Fase 3 — Guardando resultado…'), 50000)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [analyzing])
+
+  const fichaStale = Boolean(
+    item.analysis_generated_at &&
+    item.updated_at &&
+    new Date(item.updated_at) > new Date(item.analysis_generated_at),
+  )
+
+  const analysisErrorMsg = (!analyzing && item.diagnosis?.startsWith('ANÁLISIS_ERROR:'))
+    ? item.diagnosis.replace('ANÁLISIS_ERROR: ', '')
+    : null
+
   const copyDiagnosis = async () => {
     if (!item.diagnosis) return
     try { await navigator.clipboard.writeText(item.diagnosis) } catch { /* silencioso */ }
@@ -722,7 +741,10 @@ function CaseDetail({
             <p className="eyebrow">Diagnóstico automático</p>
             <h3 className="case-section-title">Análisis global del negocio</h3>
             {item.analysis_generated_at && (
-              <p className="analysis-meta">Generado el {formatDate(item.analysis_generated_at)}</p>
+              <p className="analysis-meta">Último análisis: {formatDate(item.analysis_generated_at)}</p>
+            )}
+            {item.updated_at && (
+              <p className="analysis-meta">Ficha guardada: {formatDate(item.updated_at)}</p>
             )}
           </div>
           <button
@@ -731,29 +753,38 @@ function CaseDetail({
             onClick={() => void onGenerateAnalysis()}
           >
             {analyzing
-              ? 'Generando…'
+              ? 'Analizando…'
               : item.analysis_generated_at
                 ? 'Regenerar análisis'
                 : 'Generar análisis global'}
           </button>
         </div>
 
-        {!item.analysis_generated_at && !analyzing && (
+        {fichaStale && !analyzing && (
+          <div className="analysis-stale-warning">
+            La ficha se actualizó después del último análisis. Pulsa «Regenerar análisis» para obtener un resultado con los datos actuales.
+          </div>
+        )}
+
+        {!item.analysis_generated_at && !analyzing && !analysisErrorMsg && (
           <div className="analysis-status analysis-status--idle">
-            <p>El análisis se generará con IA a partir de los datos del caso (sector, web, problema, notas).</p>
+            <p>El análisis se generará con IA a partir de los datos de la ficha: web, Instagram, problema y notas.</p>
           </div>
         )}
 
         {analyzing && (
           <div className="analysis-status analysis-status--generating">
             <div className="loading-spinner" />
-            <p>Analizando el negocio… puede tardar entre 10 y 30 segundos.</p>
+            <div>
+              <p>Análisis en curso con la ficha actualizada… puede tardar 1–2 minutos.</p>
+              {phaseMsg && <p className="analysis-phase">{phaseMsg}</p>}
+            </div>
           </div>
         )}
 
-        {item.analysis_generated_at && !analyzing && (
+        {item.analysis_generated_at && !analyzing && !analysisErrorMsg && (
           <div className="analysis-status analysis-status--done">
-            <p>Briefing listo. El contenido completo está en la sección Diagnóstico a continuación.</p>
+            <p>Análisis generado el {formatDate(item.analysis_generated_at)}. El briefing completo está en la sección Diagnóstico.</p>
             <div className="analysis-actions">
               <button className="btn-ghost" onClick={() => void copyDiagnosis()}>
                 Copiar briefing
@@ -765,6 +796,12 @@ function CaseDetail({
                 Descargar PDF
               </button>
             </div>
+          </div>
+        )}
+
+        {analysisErrorMsg && (
+          <div className="analysis-status analysis-status--error">
+            <strong>Error en el último análisis:</strong> {analysisErrorMsg}
           </div>
         )}
       </div>
