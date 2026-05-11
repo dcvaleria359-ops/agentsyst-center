@@ -155,37 +155,43 @@ function App() {
   const handleGenerateAnalysis = async (caseId: string) => {
     setAnalyzingCaseId(caseId)
     setError('')
+    const prevGeneratedAt = cases.find((c) => c.id === caseId)?.analysis_generated_at ?? null
     try {
-      const res = await fetch('/.netlify/functions/generate-analysis', {
+      // Background function: devuelve 202 inmediatamente, procesa en background
+      const res = await fetch('/.netlify/functions/generate-analysis-background', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ case_id: caseId }),
       })
-
-      const text = await res.text()
-      let data: { ok?: boolean; error?: string; details?: string }
-      try {
-        data = JSON.parse(text) as typeof data
-      } catch {
-        throw new Error(`Error ${res.status}: respuesta inesperada del servidor — ${text.slice(0, 200)}`)
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`Error al iniciar el análisis (${res.status}): ${text.slice(0, 200)}`)
       }
 
-      if (!data.ok) {
-        const detail = data.details ? ` (${data.details})` : ''
-        throw new Error((data.error ?? `Error ${res.status}`) + detail)
+      // Polling: comprueba Supabase cada 3s hasta que analysis_generated_at cambie
+      const MAX = 30 // 30 × 3s = 90s máximo
+      for (let i = 0; i < MAX; i++) {
+        await new Promise<void>((r) => setTimeout(r, 3000))
+        const { data: poll } = await supabase
+          .from('client_cases')
+          .select('analysis_generated_at')
+          .eq('id', caseId)
+          .single()
+        if (poll?.analysis_generated_at !== prevGeneratedAt) {
+          const { data: fresh } = await supabase
+            .from('client_cases')
+            .select('*')
+            .order('created_at', { ascending: false })
+          if (fresh) setCases(fresh as CaseItem[])
+          setSuccessMessage('Análisis generado correctamente')
+          setTimeout(() => setSuccessMessage(''), 5000)
+          setAnalyzingCaseId(null)
+          return
+        }
       }
-
-      const { data: fresh, error: fetchError } = await supabase
-        .from('client_cases')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (!fetchError) setCases((fresh ?? []) as CaseItem[])
-      setSuccessMessage('Análisis generado correctamente')
-      setTimeout(() => setSuccessMessage(''), 5000)
+      throw new Error('El análisis tardó demasiado. Revisa los logs de la función en Netlify.')
     } catch (err) {
-      const msg = (err as { message?: string })?.message ?? 'Error al generar el análisis'
-      setError(msg)
-    } finally {
+      setError((err as { message?: string })?.message ?? 'Error al generar el análisis')
       setAnalyzingCaseId(null)
     }
   }

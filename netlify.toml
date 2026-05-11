@@ -6,5 +6,5 @@
 [functions]
   node_bundler = "esbuild"
 
-[functions.generate-analysis]
-  timeout = 30
+[functions.generate-analysis-background]
+  timeout = 60
