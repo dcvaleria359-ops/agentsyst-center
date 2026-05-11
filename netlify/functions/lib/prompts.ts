@@ -8,6 +8,29 @@ export interface CaseInput {
   [key: string]: unknown
 }
 
+const BOOKING_PLATFORMS = ['booksy.com', 'glossgenius.com', 'treatwell.']
+
+function cleanGoogleRedirect(url: string): string {
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'www.google.com' && u.pathname === '/url') {
+      const real = u.searchParams.get('q') ?? u.searchParams.get('url')
+      if (real) return real
+    }
+  } catch { /* not a valid URL, return as-is */ }
+  return url
+}
+
+function normalizeUrlsInText(text: string): string {
+  return text.replace(/https?:\/\/[^\s"')\]]+/g, (match) => {
+    const cleaned = cleanGoogleRedirect(match)
+    if (BOOKING_PLATFORMS.some((p) => cleaned.includes(p))) {
+      return `${cleaned} [plataforma de reservas]`
+    }
+    return cleaned
+  })
+}
+
 // ── Phase 1: Data Collector ───────────────────────────────────────────────────
 
 export function buildDataCollectorSystemPrompt(): string {
@@ -54,15 +77,25 @@ FORMATO DE SALIDA EXACTO:
 }
 
 export function buildDataCollectorUserMessage(c: CaseInput): string {
+  const website = c.website ? normalizeUrlsInText(c.website) : null
+  const sources = c.sources ? normalizeUrlsInText(c.sources) : null
+  const request = c.request ? normalizeUrlsInText(c.request) : null
+  const notes   = c.notes   ? normalizeUrlsInText(c.notes)   : null
+
   const lines: string[] = ['## FICHA DEL CLIENTE']
 
   lines.push(`Nombre del negocio: ${c.company}`)
   lines.push(`Sector: ${c.sector ?? 'No especificado'}`)
 
-  if (c.website) lines.push(`Web oficial: ${c.website}`)
-  if (c.sources) lines.push(`URLs y redes conocidas por el operador:\n${c.sources}`)
-  if (c.request) lines.push(`Problema declarado por el cliente:\n${c.request}`)
-  if (c.notes)   lines.push(`Notas del operador:\n${c.notes}`)
+  if (website) {
+    const isBooking = BOOKING_PLATFORMS.some((p) => website.includes(p))
+    lines.push(isBooking
+      ? `Plataforma de reservas del negocio: ${website}`
+      : `Web oficial: ${website}`)
+  }
+  if (sources) lines.push(`URLs y redes conocidas por el operador:\n${sources}`)
+  if (request) lines.push(`Problema declarado por el cliente:\n${request}`)
+  if (notes)   lines.push(`Notas del operador:\n${notes}`)
 
   lines.push(`
 ## INSTRUCCIONES

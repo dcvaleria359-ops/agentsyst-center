@@ -691,12 +691,20 @@ function CaseDetail({
         </a>
       )}
 
-      {item.request && (
-        <div className="detail-block">
-          <span className="field-label">Necesidad detectada</span>
-          <p className="field-value">{item.request}</p>
-        </div>
-      )}
+      {/* Datos para análisis */}
+      <CaseSection
+        key={`entrada-${item.id}-${item.updated_at ?? ''}`}
+        eyebrow="Fase 1 — Entrada"
+        title="Datos para análisis"
+        onSave={onSave}
+        savingCase={savingCase}
+        fields={[
+          { key: 'website', label: 'Web del cliente', type: 'text',     value: item.website },
+          { key: 'request', label: 'Problema declarado', type: 'textarea', value: item.request },
+          { key: 'sources', label: 'URLs y fuentes', type: 'textarea', value: item.sources,
+            hint: 'Pega aquí URLs de Instagram, Facebook, Google Business, Booksy, GlossGenius, Treatwell, web u otras fuentes conocidas.' },
+        ]}
+      />
 
       {/* Zona de análisis IA */}
       <div className="analysis-zone">
@@ -855,6 +863,7 @@ interface FieldDef {
   type?: 'text' | 'textarea' | 'select' | 'date'
   value: string | null
   options?: string[]
+  hint?: string
 }
 
 function CaseSection({
@@ -899,13 +908,14 @@ function CaseSection({
         {fields.map((f) => (
           <div key={f.key} className={`field-edit ${f.type === 'textarea' ? 'field-edit--full' : ''}`}>
             <label className="field-label" htmlFor={f.key}>{f.label}</label>
+            {f.hint && <p className="field-hint">{f.hint}</p>}
             {f.type === 'textarea' ? (
               <textarea
                 id={f.key}
                 className="field-textarea"
                 value={draft[f.key]}
                 onChange={(e) => set(f.key, e.target.value)}
-                rows={4}
+                rows={f.key === 'sources' ? 6 : 4}
               />
             ) : f.type === 'select' ? (
               <select
