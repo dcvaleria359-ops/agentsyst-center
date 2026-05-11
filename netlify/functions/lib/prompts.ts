@@ -54,12 +54,25 @@ FORMATO DE SALIDA EXACTO:
 }
 
 export function buildDataCollectorUserMessage(c: CaseInput): string {
-  const lines: string[] = [
-    `Negocio: ${c.company}`,
-    `Sector: ${c.sector ?? 'No especificado'}`,
-  ]
-  if (c.website) lines.push(`Web oficial conocida: ${c.website}`)
-  lines.push('Busca toda la presencia online pública de este negocio y devuelve el informe estructurado.')
+  const lines: string[] = ['## FICHA DEL CLIENTE']
+
+  lines.push(`Nombre del negocio: ${c.company}`)
+  lines.push(`Sector: ${c.sector ?? 'No especificado'}`)
+
+  if (c.website) lines.push(`Web oficial: ${c.website}`)
+  if (c.sources) lines.push(`URLs y redes conocidas por el operador:\n${c.sources}`)
+  if (c.request) lines.push(`Problema declarado por el cliente:\n${c.request}`)
+  if (c.notes)   lines.push(`Notas del operador:\n${c.notes}`)
+
+  lines.push(`
+## INSTRUCCIONES
+
+1. Visita cada URL proporcionada y extrae información real de su contenido cuando el modelo lo permita.
+2. Para cada canal (web, Instagram, Facebook, Google Business): extrae datos reales si puedes acceder. Si no puedes acceder, indica "No accesible" — no inventes.
+3. No rellenes con datos genéricos del sector ni inferencias. Solo hechos verificables.
+4. Solo busca presencia online adicional si faltan datos que no han podido obtenerse de las URLs directas.
+5. Devuelve los datos limpios y ordenados según el formato indicado.`)
+
   return lines.join('\n')
 }
 

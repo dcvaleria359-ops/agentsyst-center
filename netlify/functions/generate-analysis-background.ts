@@ -69,10 +69,13 @@ export const handler = async (event: { body: string | null; httpMethod: string }
   const supabaseUrl        = process.env.SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const apiKey             = process.env.AI_API_KEY
-  const dataModel          = process.env.DATA_MODEL     ?? 'perplexity/sonar'
-  const analysisModel      = process.env.ANALYSIS_MODEL ?? 'deepseek/deepseek-r1'
+  const dataModel          = process.env.DATA_MODEL     ?? 'perplexity/sonar-pro'
+  const analysisModel      = process.env.ANALYSIS_MODEL ?? 'deepseek/deepseek-chat'
 
-  if (!supabaseUrl || !supabaseServiceKey || !apiKey) return
+  if (!supabaseUrl || !supabaseServiceKey || !apiKey) {
+    console.error('[generate-analysis] Missing env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY or AI_API_KEY not set')
+    return
+  }
 
   let caseId: string
   try {
@@ -85,6 +88,8 @@ export const handler = async (event: { body: string | null; httpMethod: string }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
   const now = new Date().toISOString()
+
+  console.log(`[generate-analysis] caseId=${caseId} DATA_MODEL=${dataModel} ANALYSIS_MODEL=${analysisModel}`)
 
   const saveError = async (msg: string) => {
     await supabase
@@ -105,9 +110,12 @@ export const handler = async (event: { body: string | null; httpMethod: string }
 
     const c = caseData as CaseInput
 
+    console.log(`[generate-analysis] case fields — website:${!!c.website} notes:${!!c.notes} request:${!!c.request} sources:${!!c.sources}`)
+
     // ── Phase 1: Data Collector ───────────────────────────────────────────────
 
     let rawData: string
+    const t1 = Date.now()
     try {
       rawData = await callModel(
         dataModel, apiKey,
@@ -115,7 +123,9 @@ export const handler = async (event: { body: string | null; httpMethod: string }
         buildDataCollectorUserMessage(c),
         2048,
       )
+      console.log(`[generate-analysis] Phase 1 OK — ${Date.now() - t1}ms`)
     } catch (e) {
+      console.error(`[generate-analysis] Phase 1 FAIL — ${Date.now() - t1}ms — ${(e as Error).message}`)
       await saveError(`Data Collector (${dataModel}): ${(e as Error).message}`)
       return
     }
@@ -123,6 +133,7 @@ export const handler = async (event: { body: string | null; httpMethod: string }
     // ── Phase 2: Business Analyst ─────────────────────────────────────────────
 
     let briefing: string
+    const t2 = Date.now()
     try {
       briefing = await callModel(
         analysisModel, apiKey,
@@ -130,7 +141,9 @@ export const handler = async (event: { body: string | null; httpMethod: string }
         buildAnalystUserMessage(c, rawData),
         4096,
       )
+      console.log(`[generate-analysis] Phase 2 OK — ${Date.now() - t2}ms`)
     } catch (e) {
+      console.error(`[generate-analysis] Phase 2 FAIL — ${Date.now() - t2}ms — ${(e as Error).message}`)
       await saveError(`Business Analyst (${analysisModel}): ${(e as Error).message}`)
       return
     }
