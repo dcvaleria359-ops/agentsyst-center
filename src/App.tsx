@@ -584,6 +584,39 @@ function CaseDetail({
     URL.revokeObjectURL(url)
   }
 
+  const printDiagnosis = () => {
+    if (!item.diagnosis) return
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const dateStr = item.analysis_generated_at
+      ? new Date(item.analysis_generated_at).toLocaleDateString('es-ES', { dateStyle: 'long' })
+      : '—'
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Briefing AgentSyst — ${esc(item.company)}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:Georgia,'Times New Roman',serif;max-width:740px;margin:40px auto;padding:0 28px;color:#111;font-size:13.5px;line-height:1.65}
+  h1{font-size:17px;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:6px;font-family:Arial,sans-serif}
+  .meta{font-size:11.5px;color:#555;margin-bottom:28px;font-family:Arial,sans-serif}
+  pre{white-space:pre-wrap;word-break:break-word;font-family:Georgia,serif;font-size:13px;line-height:1.7;margin:0}
+  @media print{body{margin:15mm 20mm}h1{page-break-after:avoid}}
+</style>
+</head>
+<body>
+<h1>Briefing AgentSyst — ${esc(item.company)}</h1>
+<p class="meta">Generado el ${esc(dateStr)} · AgentSyst Center</p>
+<pre>${esc(item.diagnosis)}</pre>
+</body>
+</html>`
+    const w = window.open('', '_blank', 'width=860,height=720')
+    if (!w) return
+    w.document.write(html)
+    w.document.close()
+    w.print()
+  }
+
   return (
     <div className="detail-scroll">
       {/* Cabecera */}
@@ -688,6 +721,9 @@ function CaseDetail({
               </button>
               <button className="btn-ghost" onClick={downloadDiagnosis}>
                 Descargar .md
+              </button>
+              <button className="btn-ghost" onClick={printDiagnosis}>
+                Descargar PDF
               </button>
             </div>
           </div>

@@ -1,15 +1,65 @@
 import { createClient } from '@supabase/supabase-js'
-import { buildSystemPrompt, buildUserMessage } from './lib/prompts'
+import {
+  type CaseInput,
+  buildDataCollectorSystemPrompt,
+  buildDataCollectorUserMessage,
+  buildAnalystSystemPrompt,
+  buildAnalystUserMessage,
+} from './lib/prompts'
 
-const PROVIDER_URLS: Record<string, string> = {
-  openrouter: 'https://openrouter.ai/api/v1/chat/completions',
-  perplexity: 'https://api.perplexity.ai/chat/completions',
-  openai:     'https://api.openai.com/v1/chat/completions',
-  groq:       'https://api.groq.com/openai/v1/chat/completions',
-}
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 interface AIResponse {
   choices: Array<{ message: { content: string } }>
+}
+
+async function callModel(
+  model: string,
+  apiKey: string,
+  system: string,
+  user: string,
+  maxTokens: number,
+): Promise<string> {
+  const res = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user',   content: user },
+      ],
+      temperature: 0.3,
+      max_tokens: maxTokens,
+    }),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`${model} — ${res.status}: ${text.slice(0, 300)}`)
+  }
+
+  const result = (await res.json()) as AIResponse
+  const content = result.choices[0]?.message?.content ?? ''
+  if (!content) throw new Error(`Empty response from ${model}`)
+  return content
+}
+
+function extractSources(rawData: string): string {
+  const match = rawData.match(/### FUENTES\s*\n([\s\S]+?)(?:\n###|$)/i)
+  return match ? match[1].trim() : ''
+}
+
+function extractOpportunities(briefing: string): string {
+  const m8 = briefing.match(/## 8\.[^\n]*\n([\s\S]+?)(?=\n---)/i)
+  const m9 = briefing.match(/## 9\.[^\n]*\n([\s\S]+?)(?=\n---)/i)
+  const parts: string[] = []
+  if (m8) parts.push('AUTOMATIZACIÓN:\n' + m8[1].trim())
+  if (m9) parts.push('COMERCIALES:\n' + m9[1].trim())
+  return parts.join('\n\n')
 }
 
 export const handler = async (event: { body: string | null; httpMethod: string }) => {
@@ -17,16 +67,16 @@ export const handler = async (event: { body: string | null; httpMethod: string }
     return { statusCode: 405, body: 'Method Not Allowed' }
   }
 
-  const supabaseUrl       = process.env.SUPABASE_URL
+  const supabaseUrl        = process.env.SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const aiProvider        = (process.env.AI_PROVIDER ?? 'openrouter').toLowerCase()
-  const aiApiKey          = process.env.AI_API_KEY
-  const aiModel           = process.env.AI_MODEL ?? 'anthropic/claude-3-haiku'
+  const apiKey             = process.env.AI_API_KEY
+  const dataModel          = process.env.DATA_MODEL    ?? 'perplexity/sonar'
+  const analysisModel      = process.env.ANALYSIS_MODEL ?? 'deepseek/deepseek-r1'
 
   if (!supabaseUrl || !supabaseServiceKey) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Supabase config missing' }) }
   }
-  if (!aiApiKey) {
+  if (!apiKey) {
     return { statusCode: 500, body: JSON.stringify({ error: 'AI_API_KEY not configured' }) }
   }
 
@@ -54,48 +104,71 @@ export const handler = async (event: { body: string | null; httpMethod: string }
     }
   }
 
-  const providerUrl = PROVIDER_URLS[aiProvider] ?? PROVIDER_URLS.openrouter
+  const c = caseData as CaseInput
+
+  // ── Phase 1: Data Collector ─────────────────────────────────────────────────
+
+  let rawData: string
+  try {
+    rawData = await callModel(
+      dataModel,
+      apiKey,
+      buildDataCollectorSystemPrompt(),
+      buildDataCollectorUserMessage(c),
+      2048,
+    )
+  } catch (err) {
+    return {
+      statusCode: 502,
+      body: JSON.stringify({ error: `Data Collector: ${(err as Error).message}` }),
+    }
+  }
+
+  // ── Phase 2: Business Analyst ───────────────────────────────────────────────
 
   let briefing: string
   try {
-    const res = await fetch(providerUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${aiApiKey}`,
-      },
-      body: JSON.stringify({
-        model: aiModel,
-        messages: [
-          { role: 'system', content: buildSystemPrompt() },
-          { role: 'user',   content: buildUserMessage(caseData as Parameters<typeof buildUserMessage>[0]) },
-        ],
-        temperature: 0.3,
-        max_tokens: 4096,
-      }),
-    })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      return { statusCode: 502, body: JSON.stringify({ error: `AI error: ${errText}` }) }
-    }
-
-    const result = (await res.json()) as AIResponse
-    briefing = result.choices[0]?.message?.content ?? ''
-    if (!briefing) throw new Error('Empty response from AI provider')
+    briefing = await callModel(
+      analysisModel,
+      apiKey,
+      buildAnalystSystemPrompt(),
+      buildAnalystUserMessage(c, rawData),
+      4096,
+    )
   } catch (err) {
-    return { statusCode: 502, body: JSON.stringify({ error: (err as Error).message }) }
+    return {
+      statusCode: 502,
+      body: JSON.stringify({ error: `Business Analyst: ${(err as Error).message}` }),
+    }
   }
 
+  // ── Save to Supabase ────────────────────────────────────────────────────────
+
   const now = new Date().toISOString()
+
+  const sources      = extractSources(rawData)
+  const opportunities = extractOpportunities(briefing)
+
+  const { data: existing } = await supabase
+    .from('client_cases')
+    .select('history')
+    .eq('id', caseId)
+    .single()
+
+  const historyEntry = `[${now.slice(0, 10)}] Análisis generado — Data Collector: ${dataModel} · Business Analyst: ${analysisModel}`
+  const history = [existing?.history, historyEntry].filter(Boolean).join('\n')
+
   const { error: updateError } = await supabase
     .from('client_cases')
     .update({
-      diagnosis:              briefing,
-      current_phase:          'Diagnóstico realizado',
-      next_action:            'Revisar diagnóstico y definir solución propuesta',
-      analysis_generated_at:  now,
-      updated_at:             now,
+      diagnosis:             briefing,
+      opportunities:         opportunities || null,
+      sources:               sources || null,
+      history,
+      current_phase:         'Diagnóstico realizado',
+      next_step:             'Generar solución propuesta',
+      analysis_generated_at: now,
+      updated_at:            now,
     })
     .eq('id', caseId)
 

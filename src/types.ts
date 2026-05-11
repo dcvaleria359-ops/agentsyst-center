@@ -50,6 +50,7 @@ export interface CaseItem {
   proposal_status: string | null
   // Seguimiento
   last_contact_at: string | null
+  next_step: string | null
   next_action: string | null
   client_response: string | null
 }
