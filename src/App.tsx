@@ -168,10 +168,10 @@ function App() {
         throw new Error(`Error al iniciar el análisis (${res.status}): ${text.slice(0, 200)}`)
       }
 
-      // Polling: comprueba Supabase cada 3s hasta que analysis_generated_at cambie
-      const MAX = 30 // 30 × 3s = 90s máximo
+      // Polling: comprueba Supabase cada 5s hasta que analysis_generated_at cambie (máx 5 min)
+      const MAX = 60 // 60 × 5s = 300s
       for (let i = 0; i < MAX; i++) {
-        await new Promise<void>((r) => setTimeout(r, 3000))
+        await new Promise<void>((r) => setTimeout(r, 5000))
         const { data: poll } = await supabase
           .from('client_cases')
           .select('analysis_generated_at')
@@ -183,13 +183,18 @@ function App() {
             .select('*')
             .order('created_at', { ascending: false })
           if (fresh) setCases(fresh as CaseItem[])
-          setSuccessMessage('Análisis generado correctamente')
-          setTimeout(() => setSuccessMessage(''), 5000)
           setAnalyzingCaseId(null)
+          const updated = (fresh as CaseItem[] | null)?.find((c) => c.id === caseId)
+          if (updated?.diagnosis?.startsWith('ANÁLISIS_ERROR:')) {
+            setError(updated.diagnosis.replace('ANÁLISIS_ERROR: ', ''))
+          } else {
+            setSuccessMessage('Análisis generado correctamente')
+            setTimeout(() => setSuccessMessage(''), 5000)
+          }
           return
         }
       }
-      throw new Error('El análisis tardó demasiado. Revisa los logs de la función en Netlify.')
+      throw new Error('Tiempo de espera agotado (5 min). Revisa los logs de la función en Netlify.')
     } catch (err) {
       setError((err as { message?: string })?.message ?? 'Error al generar el análisis')
       setAnalyzingCaseId(null)
