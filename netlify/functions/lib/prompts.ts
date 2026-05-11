@@ -1,8 +1,12 @@
 export interface CaseInput {
   company: string
+  contact_name: string | null
   sector: string | null
-  request: string | null
+  email: string | null
+  whatsapp: string | null
   website: string | null
+  instagram: string | null
+  request: string | null
   notes: string | null
   sources: string | null
   [key: string]: unknown
@@ -77,25 +81,29 @@ FORMATO DE SALIDA EXACTO:
 }
 
 export function buildDataCollectorUserMessage(c: CaseInput): string {
-  const website = c.website ? normalizeUrlsInText(c.website) : null
-  const sources = c.sources ? normalizeUrlsInText(c.sources) : null
-  const request = c.request ? normalizeUrlsInText(c.request) : null
-  const notes   = c.notes   ? normalizeUrlsInText(c.notes)   : null
+  const website   = c.website   ? normalizeUrlsInText(c.website)   : null
+  const instagram = c.instagram ? normalizeUrlsInText(c.instagram) : null
+  const request   = c.request   ? normalizeUrlsInText(c.request)   : null
+  const notes     = c.notes     ? normalizeUrlsInText(c.notes)     : null
 
   const lines: string[] = ['## FICHA DEL CLIENTE']
 
   lines.push(`Nombre del negocio: ${c.company}`)
+  if (c.contact_name) lines.push(`Contacto: ${c.contact_name}`)
   lines.push(`Sector: ${c.sector ?? 'No especificado'}`)
+  if (c.email)    lines.push(`Email: ${c.email}`)
+  if (c.whatsapp) lines.push(`WhatsApp: ${c.whatsapp}`)
 
   if (website) {
     const isBooking = BOOKING_PLATFORMS.some((p) => website.includes(p))
     lines.push(isBooking
-      ? `Plataforma de reservas del negocio: ${website}`
+      ? `Plataforma de reservas (no web propia): ${website}`
       : `Web oficial: ${website}`)
   }
-  if (sources) lines.push(`URLs y redes conocidas por el operador:\n${sources}`)
-  if (request) lines.push(`Problema declarado por el cliente:\n${request}`)
-  if (notes)   lines.push(`Notas del operador:\n${notes}`)
+
+  if (instagram) lines.push(`Instagram: ${instagram}`)
+  if (request)   lines.push(`Problema declarado por el cliente:\n${request}`)
+  if (notes)     lines.push(`Notas para análisis:\n${notes}`)
 
   lines.push(`
 ## INSTRUCCIONES

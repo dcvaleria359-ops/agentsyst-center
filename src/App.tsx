@@ -90,8 +90,12 @@ function App() {
         .insert({
           lead_id:          leadId,
           company:          lead.nombre_negocio  ?? '',
+          contact_name:     lead.nombre_contacto ?? '',
           website:          lead.website         ?? '',
           sector:           lead.tipo_negocio    ?? '',
+          email:            lead.email           ?? '',
+          whatsapp:         lead.whatsapp        ?? '',
+          instagram:        lead.instagram       ?? '',
           origin:           'web',
           request:          lead.problema        ?? '',
           notes:            lead.notas           ?? '',
@@ -691,18 +695,23 @@ function CaseDetail({
         </a>
       )}
 
-      {/* Datos para análisis */}
+      {/* Ficha editable del caso */}
       <CaseSection
-        key={`entrada-${item.id}-${item.updated_at ?? ''}`}
-        eyebrow="Fase 1 — Entrada"
-        title="Datos para análisis"
+        key={`ficha-${item.id}-${item.updated_at ?? ''}`}
+        eyebrow="Ficha del caso"
+        title="Ficha editable del caso"
         onSave={onSave}
         savingCase={savingCase}
         fields={[
-          { key: 'website', label: 'Web del cliente', type: 'text',     value: item.website },
-          { key: 'request', label: 'Problema declarado', type: 'textarea', value: item.request },
-          { key: 'sources', label: 'URLs y fuentes', type: 'textarea', value: item.sources,
-            hint: 'Pega aquí URLs de Instagram, Facebook, Google Business, Booksy, GlossGenius, Treatwell, web u otras fuentes conocidas.' },
+          { key: 'company',      label: 'Nombre del negocio',    type: 'text',     value: item.company },
+          { key: 'contact_name', label: 'Contacto',              type: 'text',     value: item.contact_name },
+          { key: 'sector',       label: 'Sector / tipo negocio', type: 'text',     value: item.sector },
+          { key: 'email',        label: 'Email',                 type: 'text',     value: item.email },
+          { key: 'whatsapp',     label: 'WhatsApp',              type: 'text',     value: item.whatsapp },
+          { key: 'website',      label: 'Web',                   type: 'text',     value: item.website },
+          { key: 'instagram',    label: 'Instagram',             type: 'text',     value: item.instagram },
+          { key: 'request',      label: 'Problema declarado',    type: 'textarea', value: item.request },
+          { key: 'notes',        label: 'Notas para análisis',   type: 'textarea', value: item.notes },
         ]}
       />
 

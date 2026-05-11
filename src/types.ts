@@ -16,8 +16,12 @@ export interface CaseItem {
   id: string
   lead_id: number | null
   company: string
+  contact_name: string | null
   website: string | null
   sector: string | null
+  email: string | null
+  whatsapp: string | null
+  instagram: string | null
   origin: string | null
   request: string | null
   current_phase: CasePhase
