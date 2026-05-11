@@ -1,66 +1,57 @@
-export type NavigationKey = 'panel' | 'casos' | 'fases' | 'agentes'
+export type NavigationKey = 'dashboard' | 'leads' | 'casos' | 'agentes'
 
-export type Priority = 'Alta' | 'Media' | 'Baja'
-export type CaseStatus = 'Nuevo' | 'En curso' | 'Bloqueado' | 'Listo para avanzar'
 export type CasePhase =
-  | 'Nuevo caso'
-  | 'Análisis del negocio'
-  | 'Soluciones propuestas'
-  | 'Propuesta visual'
+  | 'Caso abierto'
+  | 'Diagnóstico realizado'
+  | 'Solución propuesta'
   | 'Demo preparada'
-  | 'Cierre'
-  | 'Implementación'
-
-export interface ChecklistItem {
-  label: string
-  done: boolean
-}
-
-export interface HistoryEvent {
-  label: string
-  time: string
-}
-
-export interface AgentOutputItem {
-  id: string
-  agentKey: 'agent1' | 'agent2' | string
-  agentName: string
-  title: string
-  content: string
-  createdAt: string
-}
-
-export interface AgentRunItem {
-  id: string
-  agentKey: 'agent1' | 'agent2' | string
-  agentName: string
-  status: 'running' | 'completed' | 'failed' | string
-  startedAt: string
-  completedAt?: string
-  error?: string
-}
+  | 'Propuesta lista'
+  | 'Contactado'
+  | 'Seguimiento'
+  | 'Ganado'
+  | 'Perdido'
+  | 'Dormido'
 
 export interface CaseItem {
   id: string
-  leadId?: number
+  lead_id: number | null
   company: string
-  website: string
-  sector: string
-  origin: string
-  request: string
-  priority: Priority
-  notes: string
-  currentPhase: CasePhase
-  currentAgent: string
-  expectedOutput: string
-  nextStep: string
-  blocker: string
-  status: CaseStatus
-  documents: string[]
-  outputs: AgentOutputItem[]
-  runs: AgentRunItem[]
-  checklist: ChecklistItem[]
-  history: HistoryEvent[]
+  website: string | null
+  sector: string | null
+  origin: string | null
+  request: string | null
+  current_phase: CasePhase
+  commercial_status: string | null
+  notes: string | null
+  history: string | null
+  created_at: string
+  updated_at: string | null
+  analysis_generated_at: string | null
+  // Diagnóstico
+  diagnosis: string | null
+  opportunities: string | null
+  sources: string | null
+  // Solución
+  proposed_solution: string | null
+  included_modules: string | null
+  estimated_price: string | null
+  difficulty: string | null
+  tools_needed: string | null
+  // Demo
+  demo_status: string | null
+  demo_url: string | null
+  demo_description: string | null
+  demo_notes: string | null
+  demo_prompt: string | null
+  demo_tool: string | null
+  // Propuesta comercial
+  commercial_proposal: string | null
+  whatsapp_message: string | null
+  proposal_status: string | null
+  // Seguimiento
+  last_contact_at: string | null
+  next_action: string | null
+  client_response: string | null
 }
 
 export interface AgentItem {
