@@ -90,7 +90,7 @@ describe('normalize', () => {
 
   it('adds reviews to required_data when status is pending_connector', () => {
     const result = normalize(BASE, FIXED_NOW)
-    expect(result.required_data).toContain('google_my_business_reviews')
+    expect(result.required_data).toContain('google_my_business')
   })
 
   it('adds instagram to confirmed_data when status is ok', () => {

@@ -1,13 +1,13 @@
 import type { CollectorOutput, NormalizedInput } from './types'
 
 function daysBetween(from: Date, to: Date): number {
-  return Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24))
+  return Math.max(0, Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)))
 }
 
 function inferSector(title: string | null, bio: string | null): string {
   const text = `${title ?? ''} ${bio ?? ''}`.toLowerCase()
   if (/peluquer|barber|estilista|capilar/.test(text)) return 'peluquería'
-  if (/restaurant|cocina|gastronomí|comer|chef/.test(text)) return 'restauración'
+  if (/restaurant|cocina|gastronomía|comer|chef/.test(text)) return 'restauración'
   if (/clínica|médic|salud|estética|belleza/.test(text)) return 'salud y estética'
   if (/inmobiliar|piso|alquiler|venta de/.test(text)) return 'inmobiliaria'
   return 'negocio local'
@@ -79,6 +79,8 @@ export function normalize(raw: CollectorOutput, now = new Date()): NormalizedInp
   } else if (!ig) {
     required.push('instagram')
   }
+  // Si ig existe pero status !== 'ok' (perfil privado, error de módulo),
+  // instagram queda null y no se registra en required ni confirmed.
 
   // GMB / reviews
   let gmb: NormalizedInput['gmb'] = null
@@ -89,7 +91,7 @@ export function normalize(raw: CollectorOutput, now = new Date()): NormalizedInp
     }
     confirmed.push('google_my_business')
   } else {
-    required.push('google_my_business_reviews')
+    required.push('google_my_business')
   }
 
   // Stack
@@ -98,7 +100,11 @@ export function normalize(raw: CollectorOutput, now = new Date()): NormalizedInp
     booking_tools: raw.stack_details.booking_tools,
     marketing_tools: raw.stack_details.marketing_tools,
   }
-  if (raw.stack_details.status === 'ok') confirmed.push('tech_stack')
+  if (raw.stack_details.status === 'ok') {
+    confirmed.push('tech_stack')
+  } else {
+    required.push('tech_stack')
+  }
 
   // Sector & location inference
   const titleText = raw.website_info?.title ?? null
