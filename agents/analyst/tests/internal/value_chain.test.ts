@@ -102,4 +102,33 @@ describe('analyzeValueChain', () => {
     expect(result.has_review_management).toBe(true)
     expect(result.process_gaps.find(g => g.area === 'retención')).toBeUndefined()
   })
+
+  it('detects no CRM when no CRM tools present', () => {
+    const result = analyzeValueChain(BASE_INPUT)
+    expect(result.has_crm).toBe(false)
+    const gap = result.process_gaps.find(g => g.area === 'operaciones')
+    expect(gap).toBeDefined()
+    expect(gap?.impact).toBe('medio')
+  })
+
+  it('detects CRM when hubspot is in marketing tools', () => {
+    const input = {
+      ...BASE_INPUT,
+      stack: { ...BASE_INPUT.stack, marketing_tools: ['HubSpot', 'Google Tag Manager'] },
+    }
+    const result = analyzeValueChain(input)
+    expect(result.has_crm).toBe(true)
+    expect(result.process_gaps.find(g => g.area === 'operaciones')).toBeUndefined()
+  })
+
+  it('detects no visibility tools when none present', () => {
+    const input = {
+      ...BASE_INPUT,
+      website: { ...BASE_INPUT.website!, tech_stack: ['WordPress'] },
+      stack: { ...BASE_INPUT.stack, marketing_tools: [] },
+    }
+    const result = analyzeValueChain(input)
+    expect(result.has_visibility_tools).toBe(false)
+    expect(result.process_gaps.find(g => g.area === 'visibilidad')).toBeDefined()
+  })
 })
