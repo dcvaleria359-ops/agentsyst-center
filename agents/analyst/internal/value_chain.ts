@@ -1,5 +1,5 @@
 import type { NormalizedInput, ValueChainAnalysis, ProcessGap, Evidence } from '../types'
-import { BOOKING_KEYWORDS } from '../config'
+import { BOOKING_KEYWORDS, CRM_KEYWORDS, VISIBILITY_KEYWORDS } from '../config'
 
 function hasBookingTool(input: NormalizedInput): boolean {
   if (input.stack.booking_tools.length > 0) return true
@@ -11,13 +11,8 @@ function hasBookingTool(input: NormalizedInput): boolean {
 }
 
 function hasCRM(input: NormalizedInput): boolean {
-  const allTools = [
-    ...input.stack.marketing_tools,
-    ...(input.website?.tech_stack ?? []),
-  ].map(s => s.toLowerCase())
-  return allTools.some(t =>
-    t.includes('crm') || t.includes('hubspot') || t.includes('salesforce') || t.includes('zoho')
-  )
+  const tools = input.stack.marketing_tools.map(s => s.toLowerCase())
+  return CRM_KEYWORDS.some(k => tools.some(t => t.includes(k)))
 }
 
 function hasLeadCapture(input: NormalizedInput): boolean {
@@ -25,16 +20,15 @@ function hasLeadCapture(input: NormalizedInput): boolean {
 }
 
 function hasReviewManagement(input: NormalizedInput): boolean {
-  return input.gmb !== null && input.gmb.avg_rating !== null
+  return input.gmb !== null
 }
 
 function hasVisibilityTools(input: NormalizedInput): boolean {
-  const tools = input.stack.marketing_tools.map(t => t.toLowerCase())
-  const tech = (input.website?.tech_stack ?? []).map(t => t.toLowerCase())
-  const all = [...tools, ...tech]
-  return all.some(t =>
-    t.includes('tag manager') || t.includes('analytics') || t.includes('gtm') || t.includes('pixel')
-  )
+  const all = [
+    ...input.stack.marketing_tools,
+    ...(input.website?.tech_stack ?? []),
+  ].map(t => t.toLowerCase())
+  return VISIBILITY_KEYWORDS.some(k => all.some(t => t.includes(k)))
 }
 
 export function analyzeValueChain(input: NormalizedInput): ValueChainAnalysis {

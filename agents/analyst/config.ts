@@ -19,4 +19,8 @@ export const ANALYTICS_TOOLS = ['google analytics', 'google tag manager', 'gtm',
 
 export const PIXEL_TOOLS = ['meta pixel', 'facebook pixel', 'tiktok pixel', 'pinterest tag'] as const
 
+export const CRM_KEYWORDS = ['crm', 'hubspot', 'salesforce', 'zoho'] as const
+
+export const VISIBILITY_KEYWORDS = ['tag manager', 'analytics', 'gtm', 'pixel'] as const
+
 export const CTA_KEYWORDS = ['reservar', 'cita', 'contactar', 'contacto', 'whatsapp', 'llamar', 'pedir', 'book', 'appointment'] as const
