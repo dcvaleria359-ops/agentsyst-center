@@ -83,7 +83,7 @@ describe('normalize', () => {
 
   it('calculates days_since_last_post from most recent sample', () => {
     const result = normalize(BASE, FIXED_NOW)
-    // 2024-05-16 to 2026-05-12 = ~361 days
+    // 2025-05-16 to 2026-05-12 = ~361 days
     expect(result.instagram?.days_since_last_post).toBeGreaterThan(350)
     expect(result.instagram?.days_since_last_post).toBeLessThan(380)
   })
