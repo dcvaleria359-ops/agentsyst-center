@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
+    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "*.ts",
+    "internal/**/*.ts",
+    "external/**/*.ts",
+    "reports/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "outputs", "test-cases"]
+}
