@@ -43,7 +43,7 @@ function buildWeaknesses(website: WebsiteAnalysis, social: SocialAnalysis, value
   const items: SwotItem[] = []
 
   website.alerts.forEach(alert => {
-    items.push({ text: alert, evidence: website.evidence.slice(0, 2) })
+    items.push({ text: alert, evidence: [ev('website.alerts', alert)] })
   })
 
   social.channels.filter(c => c.status === 'dormant').forEach(ch => {

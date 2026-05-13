@@ -55,7 +55,7 @@ describe('synthesize', () => {
   it('produces swot with all 4 quadrants populated', async () => {
     const llm = createMockLLMClient(MOCK_SUMMARY)
     const result = await synthesize(WEBSITE, SOCIAL, VALUE_CHAIN, PESTLE, COMPETITOR, llm)
-    expect(result.swot.strengths.length).toBeGreaterThanOrEqual(0)
+    expect(result.swot.strengths.length).toBeGreaterThan(0)
     expect(result.swot.weaknesses.length).toBeGreaterThan(0)
     expect(result.swot.opportunities.length).toBeGreaterThan(0)
     expect(result.swot.threats.length).toBeGreaterThan(0)
