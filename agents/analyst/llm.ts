@@ -1,23 +1,32 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { LLM } from './config'
+
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 export interface LLMClient {
   generate(prompt: string, systemPrompt?: string): Promise<string>
 }
 
-export function createLLMClient(apiKey: string): LLMClient {
-  const client = new Anthropic({ apiKey })
+export function createLLMClient(apiKey: string, model?: string): LLMClient {
+  const modelId = model ?? process.env.OPENROUTER_MODEL ?? LLM.MODEL
   return {
     async generate(prompt, systemPrompt = LLM.SYSTEM_ANALYST) {
-      const response = await client.messages.create({
-        model: LLM.MODEL,
-        max_tokens: LLM.MAX_TOKENS,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: prompt }],
+      const res = await fetch(OPENROUTER_BASE_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt },
+          ],
+        }),
       })
-      const block = response.content[0]
-      if (block.type !== 'text') throw new Error('Unexpected LLM response type')
-      return block.text
+      if (!res.ok) throw new Error(`OpenRouter error ${res.status}: ${await res.text()}`)
+      const data = await res.json() as { choices: Array<{ message: { content: string } }> }
+      return data.choices[0]?.message?.content ?? ''
     },
   }
 }

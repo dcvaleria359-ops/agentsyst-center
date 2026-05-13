@@ -598,10 +598,22 @@ function CaseDetail({
   useEffect(() => {
     if (!analyzing) { setPhaseMsg(''); return }
     setPhaseMsg('Fase 1 — Recopilando datos del negocio…')
-    const t1 = setTimeout(() => setPhaseMsg('Fase 2 — Generando diagnóstico…'), 18000)
-    const t2 = setTimeout(() => setPhaseMsg('Fase 3 — Guardando resultado…'), 50000)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
+    const t1 = setTimeout(() => setPhaseMsg('Fase 2 — Extrayendo datos estructurados…'), 18000)
+    const t2 = setTimeout(() => setPhaseMsg('Fase 3 — Generando análisis completo (PESTLE, SWOT, recomendaciones)…'), 36000)
+    const t3 = setTimeout(() => setPhaseMsg('Fase 4 — Guardando resultado…'), 100000)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [analyzing])
+
+  type AnalysisTab = 'resumen' | 'informe' | 'handoff' | 'notas'
+  const [analysisTab, setAnalysisTab] = useState<AnalysisTab>('resumen')
+  const [humanNotes, setHumanNotes] = useState(item.human_notes ?? '')
+  const [humanReviewStatus, setHumanReviewStatus] = useState(item.human_review_status ?? 'draft')
+  const [savingNotes, setSavingNotes] = useState(false)
+
+  useEffect(() => {
+    setHumanNotes(item.human_notes ?? '')
+    setHumanReviewStatus(item.human_review_status ?? 'draft')
+  }, [item.id, item.human_notes, item.human_review_status])
 
   const fichaStale = Boolean(
     item.analysis_generated_at &&
@@ -613,14 +625,16 @@ function CaseDetail({
     ? item.diagnosis.replace('ANÁLISIS_ERROR: ', '')
     : null
 
+  const reportText = item.markdown_report ?? item.diagnosis ?? ''
+
   const copyDiagnosis = async () => {
-    if (!item.diagnosis) return
-    try { await navigator.clipboard.writeText(item.diagnosis) } catch { /* silencioso */ }
+    if (!reportText) return
+    try { await navigator.clipboard.writeText(reportText) } catch { /* silencioso */ }
   }
 
   const downloadDiagnosis = () => {
-    if (!item.diagnosis) return
-    const blob = new Blob([item.diagnosis], { type: 'text/markdown' })
+    if (!reportText) return
+    const blob = new Blob([reportText], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -629,8 +643,18 @@ function CaseDetail({
     URL.revokeObjectURL(url)
   }
 
+  const saveNotes = async () => {
+    setSavingNotes(true)
+    try {
+      await onSave({ human_notes: humanNotes, human_review_status: humanReviewStatus })
+    } finally {
+      setSavingNotes(false)
+    }
+  }
+
   const printDiagnosis = () => {
-    if (!item.diagnosis) return
+    const reportText = item.markdown_report ?? item.diagnosis
+    if (!reportText) return
     const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     const dateStr = item.analysis_generated_at
       ? new Date(item.analysis_generated_at).toLocaleDateString('es-ES', { dateStyle: 'long' })
@@ -652,7 +676,7 @@ function CaseDetail({
 <body>
 <h1>Briefing AgentSyst — ${esc(item.company)}</h1>
 <p class="meta">Generado el ${esc(dateStr)} · AgentSyst Center</p>
-<pre>${esc(item.diagnosis)}</pre>
+<pre>${esc(reportText)}</pre>
 </body>
 </html>`
     const w = window.open('', '_blank', 'width=860,height=720')
@@ -782,22 +806,128 @@ function CaseDetail({
           </div>
         )}
 
-        {item.analysis_generated_at && !analyzing && !analysisErrorMsg && (
-          <div className="analysis-status analysis-status--done">
-            <p>Análisis generado el {formatDate(item.analysis_generated_at)}. El briefing completo está en la sección Diagnóstico.</p>
-            <div className="analysis-actions">
-              <button className="btn-ghost" onClick={() => void copyDiagnosis()}>
-                Copiar briefing
-              </button>
-              <button className="btn-ghost" onClick={downloadDiagnosis}>
-                Descargar .md
-              </button>
-              <button className="btn-ghost" onClick={printDiagnosis}>
-                Descargar PDF
-              </button>
+        {item.analysis_generated_at && !analyzing && !analysisErrorMsg && (() => {
+          type BriefAnalysis = {
+            summary?: string
+            confidence_level?: string
+            recommendations?: Array<{ description?: string; impact?: string; confidence?: string }>
+            process_gaps?: Array<{ area?: string; impact?: string }>
+          }
+          const ba = item.business_analysis as BriefAnalysis | null
+          const confirmedRecs = ba?.recommendations?.filter(r => r.confidence === 'confirmed') ?? []
+
+          return (
+            <div className="analysis-tabs">
+              <div className="analysis-tab-bar">
+                {(['resumen', 'informe', 'handoff', 'notas'] as AnalysisTab[]).map(tab => (
+                  <button
+                    key={tab}
+                    className={`analysis-tab-btn${analysisTab === tab ? ' analysis-tab-btn--active' : ''}`}
+                    onClick={() => setAnalysisTab(tab)}
+                  >
+                    {tab === 'resumen' ? 'Resumen' : tab === 'informe' ? 'Informe' : tab === 'handoff' ? 'Handoff Agente 3' : 'Notas'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="analysis-tab-panel">
+                {analysisTab === 'resumen' && (
+                  <div className="analysis-summary-card">
+                    {ba?.summary ? (
+                      <p className="analysis-summary-text">{ba.summary}</p>
+                    ) : (
+                      <p className="analysis-summary-text" style={{ color: 'var(--text-muted)' }}>
+                        Análisis anterior sin estructura nueva. Consulta la sección Diagnóstico o regenera el análisis.
+                      </p>
+                    )}
+                    {ba?.confidence_level && (
+                      <div className="analysis-confidence">
+                        Confianza:
+                        <span className={`analysis-confidence-badge analysis-confidence-badge--${ba.confidence_level}`}>
+                          {ba.confidence_level}
+                        </span>
+                      </div>
+                    )}
+                    {confirmedRecs.length > 0 && (
+                      <div>
+                        <p className="analysis-meta" style={{ marginBottom: 6 }}>Recomendaciones prioritarias</p>
+                        <ul className="analysis-recs-list">
+                          {confirmedRecs.slice(0, 5).map((r, i) => (
+                            <li key={i} className={`analysis-rec-item analysis-rec-impact--${r.impact ?? 'medio'}`}>
+                              {r.description}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {analysisTab === 'informe' && (
+                  <div>
+                    <div className="analysis-actions" style={{ marginBottom: 8 }}>
+                      <button className="btn-ghost" onClick={() => void copyDiagnosis()}>Copiar</button>
+                      <button className="btn-ghost" onClick={downloadDiagnosis}>Descargar .md</button>
+                      <button className="btn-ghost" onClick={printDiagnosis}>Imprimir / PDF</button>
+                    </div>
+                    <pre className="analysis-preformatted">
+                      {item.markdown_report ?? item.diagnosis ?? '— Sin informe disponible —'}
+                    </pre>
+                  </div>
+                )}
+
+                {analysisTab === 'handoff' && (
+                  <div>
+                    {item.agent3_handoff ? (
+                      <>
+                        <div className="analysis-actions" style={{ marginBottom: 8 }}>
+                          <button className="btn-ghost" onClick={() => void navigator.clipboard.writeText(item.agent3_handoff!).catch(() => {})}>
+                            Copiar handoff
+                          </button>
+                        </div>
+                        <pre className="analysis-preformatted">{item.agent3_handoff}</pre>
+                      </>
+                    ) : (
+                      <p className="analysis-summary-text" style={{ color: 'var(--text-muted)' }}>
+                        Handoff no disponible para este análisis. Regenera el análisis para generarlo.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {analysisTab === 'notas' && (
+                  <div className="analysis-notes-area">
+                    <textarea
+                      className="analysis-notes-textarea"
+                      placeholder="Notas del revisor humano: contexto adicional, correcciones, observaciones antes de ejecutar el Agente 3…"
+                      value={humanNotes}
+                      onChange={(e) => setHumanNotes(e.target.value)}
+                    />
+                    <div className="analysis-review-row">
+                      <label className="analysis-meta">Estado de revisión:</label>
+                      <select
+                        className="analysis-review-select"
+                        value={humanReviewStatus}
+                        onChange={(e) => setHumanReviewStatus(e.target.value)}
+                      >
+                        <option value="draft">draft — pendiente revisión</option>
+                        <option value="reviewed">reviewed — aprobado</option>
+                        <option value="needs_revision">needs_revision — requiere cambios</option>
+                      </select>
+                      <button
+                        className="btn-primary"
+                        disabled={savingNotes || savingCase}
+                        onClick={() => void saveNotes()}
+                      >
+                        {savingNotes ? 'Guardando…' : 'Guardar notas'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {analysisErrorMsg && (
           <div className="analysis-status analysis-status--error">

@@ -29,8 +29,14 @@ function computeConfidence(normalized: NormalizedInput): BusinessAnalysis['confi
   return 'low'
 }
 
-export async function runAnalysis(raw: CollectorOutput, llm: LLMClient): Promise<BusinessAnalysis> {
+export async function runAnalysis(
+  raw: CollectorOutput,
+  llm: LLMClient,
+  overrides?: { sector?: string; location?: string },
+): Promise<BusinessAnalysis> {
   const normalized = normalize(raw)
+  if (overrides?.sector) normalized.sector = overrides.sector
+  if (overrides?.location) normalized.location = overrides.location
 
   const website = analyzeWebsite(normalized)
   const social = analyzeSocial(normalized)

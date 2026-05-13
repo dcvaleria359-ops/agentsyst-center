@@ -35,6 +35,13 @@ export interface CaseItem {
   diagnosis: string | null
   opportunities: string | null
   sources: string | null
+  // Análisis estructurado (Agente 2)
+  raw_business_data: string | null
+  business_analysis: Record<string, unknown> | null
+  markdown_report: string | null
+  agent3_handoff: string | null
+  human_notes: string | null
+  human_review_status: string | null
   // Solución
   proposed_solution: string | null
   included_modules: string | null

@@ -40,8 +40,18 @@ export async function analyzePestle(input: NormalizedInput, llm: LLMClient): Pro
   const response = await llm.generate(prompt)
   const parsed = parseJSONResponse<{ factors: PestleFactor[] }>(response)
 
+  if (!Array.isArray(parsed.factors)) {
+    throw new Error('LLM did not return a factors array')
+  }
+
+  const factors = parsed.factors.map(f => ({
+    ...f,
+    opportunities: Array.isArray(f.opportunities) ? f.opportunities : [],
+    risks: Array.isArray(f.risks) ? f.risks : [],
+  }))
+
   return {
-    factors: parsed.factors,
+    factors,
     sector: input.sector,
     location: input.location,
     generated_by: 'llm',

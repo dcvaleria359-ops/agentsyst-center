@@ -3,6 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { runAnalysis, toJSON } from './service'
 import { toMarkdown } from './reports/markdown'
+import { toHandoff } from './reports/agent3-handoff'
 import { createLLMClient } from './llm'
 import type { CollectorOutput } from './types'
 
@@ -14,9 +15,9 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) {
-    console.error('[analyst] ANTHROPIC_API_KEY no configurada. Ver .env.example')
+    console.error('[analyst] OPENROUTER_API_KEY no configurada. Ver .env.example')
     process.exit(1)
   }
 
@@ -48,14 +49,17 @@ async function main(): Promise<void> {
 
     const jsonFile = path.join(outputDir, `${raw.case_id}-analysis.json`)
     const mdFile = path.join(outputDir, `${raw.case_id}-report.md`)
+    const handoffFile = path.join(outputDir, `${raw.case_id}-agent3-handoff.md`)
 
     const analysisJSON = JSON.stringify(toJSON(analysis), null, 2)
     fs.writeFileSync(jsonFile, analysisJSON)
     fs.writeFileSync(mdFile, toMarkdown(analysis))
+    fs.writeFileSync(handoffFile, toHandoff(analysis))
 
     console.error(`[analyst] Completado en ${elapsed}s`)
     console.error(`[analyst] JSON: ${jsonFile}`)
     console.error(`[analyst] Markdown: ${mdFile}`)
+    console.error(`[analyst] Handoff: ${handoffFile}`)
     console.error(`[analyst] Confianza: ${analysis.confidence_level} | Estado: ${analysis.human_review_status}`)
     console.error(`[analyst] Datos pendientes: ${analysis.required_data.length}`)
 

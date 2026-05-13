@@ -1,16 +1,16 @@
 import type { BusinessAnalysis, SwotMatrix, Recommendation, ProcessGap, PestleAnalysis, CompetitorAnalysis } from '../types'
 
-function swotTable(swot: SwotMatrix): string {
-  const rows = Math.max(swot.strengths.length, swot.weaknesses.length, swot.opportunities.length, swot.threats.length)
-  let table = '| Fortalezas | Debilidades | Oportunidades | Amenazas |\n|---|---|---|---|\n'
-  for (let i = 0; i < rows; i++) {
-    const s = swot.strengths[i]?.text ?? ''
-    const w = swot.weaknesses[i]?.text ?? ''
-    const o = swot.opportunities[i]?.text ?? ''
-    const t = swot.threats[i]?.text ?? ''
-    if (s || w || o || t) table += `| ${s} | ${w} | ${o} | ${t} |\n`
-  }
-  return table
+function swotSections(swot: SwotMatrix): string {
+  const top4 = <T>(arr: T[]) => arr.slice(0, 4)
+  const list = (items: Array<{ text: string }>) =>
+    items.length > 0 ? top4(items).map(i => `- ${i.text}`).join('\n') : '_Sin datos._'
+
+  return [
+    `### Fortalezas\n${list(swot.strengths)}`,
+    `### Debilidades\n${list(swot.weaknesses)}`,
+    `### Oportunidades _(análisis de contexto — requieren validación)_\n${list(swot.opportunities)}`,
+    `### Amenazas _(análisis de contexto — requieren validación)_\n${list(swot.threats)}`,
+  ].join('\n\n')
 }
 
 function recsSection(recs: Recommendation[]): string {
@@ -37,13 +37,13 @@ function pestleSection(pestle: PestleAnalysis): string {
 
 function competitorSection(comp: CompetitorAnalysis): string {
   const pf = comp.porters_five_forces
-  const lines = [
+  const lines = pf ? [
     `- **Rivalidad:** ${pf.rivalry}`,
     `- **Poder del cliente:** ${pf.bargaining_power_customers}`,
     `- **Poder del proveedor:** ${pf.bargaining_power_suppliers}`,
     `- **Nuevos entrantes:** ${pf.threat_new_entrants}`,
     `- **Sustitutos:** ${pf.threat_substitutes}`,
-  ]
+  ] : ['_Análisis competitivo no disponible (datos insuficientes)._']
   const confirmed = comp.confirmed.length > 0
     ? '\n\n**Competidores confirmados:**\n' + comp.confirmed.map(c => {
         const rating = c.rating != null ? ` · ${c.rating}★` : ''
@@ -81,7 +81,7 @@ ${analysis.summary}
 
 ## Análisis SWOT
 
-${swotTable(analysis.swot)}
+${swotSections(analysis.swot)}
 
 ---
 

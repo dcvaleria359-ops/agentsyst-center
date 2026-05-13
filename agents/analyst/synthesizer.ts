@@ -77,9 +77,6 @@ function buildThreats(pestle: PestleAnalysis, competitor: CompetitorAnalysis): S
       items.push({ text: risk, evidence: [ev(`pestle.${factor.factor}`, factor.factor)] })
     }
   }
-  if (competitor.porters_five_forces.rivalry) {
-    items.push({ text: `Rivalidad competitiva: ${competitor.porters_five_forces.rivalry}`, evidence: [ev('competitor.porters_five_forces.rivalry', competitor.porters_five_forces.rivalry)] })
-  }
   return items
 }
 
@@ -188,7 +185,7 @@ Datos clave:
 - Debilidades principales:\n${weaknesses}
 - Top 3 recomendaciones:\n${topRecs}
 
-No uses encabezados ni bullets. Escribe solo el párrafo de resumen. No menciones el nombre del analista ni del sistema.`
+No uses encabezados ni bullets. Escribe solo el párrafo de resumen. No menciones el nombre del analista ni del sistema. No incluyas el conteo de palabras.`
 }
 
 export async function synthesize(

@@ -8,7 +8,7 @@ export const THRESHOLDS = {
 } as const
 
 export const LLM = {
-  MODEL: 'claude-sonnet-4-6',
+  MODEL: 'deepseek/deepseek-r1-0528',
   MAX_TOKENS: 4096,
   SYSTEM_ANALYST: `Eres un analista de negocio experto en pymes y negocios locales en España y mercados hispanohablantes. Analizas con rigor y produces insights accionables, no relleno genérico. Responde siempre en español.`,
 } as const

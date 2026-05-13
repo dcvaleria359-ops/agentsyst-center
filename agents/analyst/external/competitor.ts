@@ -47,11 +47,15 @@ export async function analyzeCompetitors(input: NormalizedInput, llm: LLMClient)
   const response = await llm.generate(prompt)
   const parsed = parseJSONResponse<LLMCompetitorResponse>(response)
 
+  if (!parsed.porters_five_forces) {
+    throw new Error('LLM did not return porters_five_forces')
+  }
+
   const missing = [...input.required_data]
 
   return {
     confirmed,
-    inferred: parsed.inferred_dynamics,
+    inferred: parsed.inferred_dynamics ?? [],
     missing,
     porters_five_forces: parsed.porters_five_forces,
     generated_by: hasConfirmedData ? 'mixed' : 'llm_inference',
