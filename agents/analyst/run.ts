@@ -49,7 +49,8 @@ async function main(): Promise<void> {
     const jsonFile = path.join(outputDir, `${raw.case_id}-analysis.json`)
     const mdFile = path.join(outputDir, `${raw.case_id}-report.md`)
 
-    fs.writeFileSync(jsonFile, JSON.stringify(toJSON(analysis), null, 2))
+    const analysisJSON = JSON.stringify(toJSON(analysis), null, 2)
+    fs.writeFileSync(jsonFile, analysisJSON)
     fs.writeFileSync(mdFile, toMarkdown(analysis))
 
     console.error(`[analyst] Completado en ${elapsed}s`)
@@ -58,7 +59,7 @@ async function main(): Promise<void> {
     console.error(`[analyst] Confianza: ${analysis.confidence_level} | Estado: ${analysis.human_review_status}`)
     console.error(`[analyst] Datos pendientes: ${analysis.required_data.length}`)
 
-    process.stdout.write(JSON.stringify(toJSON(analysis), null, 2) + '\n')
+    process.stdout.write(analysisJSON + '\n')
   } catch (e) {
     console.error(`[analyst] Error fatal: ${(e as Error).message}`)
     process.exit(1)
