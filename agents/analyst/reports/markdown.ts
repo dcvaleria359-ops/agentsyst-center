@@ -8,7 +8,7 @@ function swotTable(swot: SwotMatrix): string {
     const w = swot.weaknesses[i]?.text ?? ''
     const o = swot.opportunities[i]?.text ?? ''
     const t = swot.threats[i]?.text ?? ''
-    table += `| ${s} | ${w} | ${o} | ${t} |\n`
+    if (s || w || o || t) table += `| ${s} | ${w} | ${o} | ${t} |\n`
   }
   return table
 }
@@ -44,13 +44,20 @@ function competitorSection(comp: CompetitorAnalysis): string {
     `- **Nuevos entrantes:** ${pf.threat_new_entrants}`,
     `- **Sustitutos:** ${pf.threat_substitutes}`,
   ]
+  const confirmed = comp.confirmed.length > 0
+    ? '\n\n**Competidores confirmados:**\n' + comp.confirmed.map(c => {
+        const rating = c.rating != null ? ` · ${c.rating}★` : ''
+        const reviews = c.review_count != null ? ` (${c.review_count} reseñas)` : ''
+        return `- ${c.name}${rating}${reviews}${c.notes ? ` — ${c.notes}` : ''}`
+      }).join('\n')
+    : ''
   const inferred = comp.inferred.length > 0
     ? '\n\n**Dinámicas inferidas (hipótesis):**\n' + comp.inferred.map(d => `- _${d}_`).join('\n')
     : ''
   const missing = comp.missing.length > 0
     ? '\n\n**Datos pendientes para completar:**\n' + comp.missing.map(m => `- ${m}`).join('\n')
     : ''
-  return lines.join('\n') + inferred + missing
+  return lines.join('\n') + confirmed + inferred + missing
 }
 
 export function toMarkdown(analysis: BusinessAnalysis): string {
