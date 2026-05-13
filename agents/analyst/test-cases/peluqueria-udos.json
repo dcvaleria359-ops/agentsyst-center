@@ -1,0 +1,101 @@
+{
+  "case_id": "peluqueria-udos",
+  "website_info": {
+    "url": "https://www.peluqueriaudos.com",
+    "status": "ok",
+    "title": "U-Dos Peluquería - Peluquería en Mutxamel, Alicante | Cortes, Color y Tratamientos Capilares",
+    "description": "Peluquería en Mutxamel, Alicante Peluquería en Mutxamel (Alicante) especializada en cortes de pelo, color y cuidado capilar. Estilo, belleza y atención personalizada para que te sientas genial en cada visita. CONTACTAR Servicios de Peluquería Te ofrecemos una amplia gama de servicios de belleza y estética para cada ocasión en nuestra peluquería en Mutxamel, Alicante. Peluquería Estética Tratamientos capilares […]",
+    "text_content": "Peluquería en Mutxamel, Alicante \n \n \n \n Peluquería en Mutxamel (Alicante) especializada en cortes de pelo, color y cuidado capilar. Estilo, belleza y atención personalizada para que te sientas genial en cada visita. \n \n \n \n \n \n \n CONTACTAR\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n Servicios de Peluquería \n \n \n \n Te ofrecemos una amplia gama de servicios de belleza y estética para cada ocasión en nuestra peluquería en Mutxamel, Alicante. \n \n \n \n \n \n \n \n \n \n \n \n Peluquería \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n Estética \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n Tratamientos capilares \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n VER TARIFAS\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n Sobre Nuestra Peluquería en Mutxamel. \n \n \n \n La peluquería en Mutxamel, Alicante U-DOS está formada por un equipo con una gran formación y gran experiencia en el sector de la peluquería y estética.Siempre tratamos de estar a la última y formándonos para poder ofrecer a nuestros clientes lo último en cortes, peinados y estilos de tendencia. Un servicio de gran calidad centrándonos en el cuidado e imagen del cabello.  \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n Sobre \n \n \n \n Lo que opinan de nosotros \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n Publicado en Alexia Puig 06/09/2020 Trustindex verifica que la fuente original de la reseña sea Google. Muy buen servicio Publicado en Sonia Giner Garcia 09/10/2019 Trustindex verifica que la fuente original de la reseña sea Google. Buena atención La evaluación general en Google es 4.8 de 5, en base a 22 reseñas \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n Localización \n \n \n \n \n \n \n \n C/ Músico Rafael Rodriguez Albert, 22, 03110 Mutxamel, Alicante\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n ContactO \n \n \n \n \n \n \n\n \n \n 965 95 52 94\n \n \n \n \n\n \n \n Info@peluqueriaudos.com\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n 2025 Copyright. By Bibe Agency \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n 2025 Copyright. By Bibe Agency \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \nUsamos cookies en nuestro sitio web para brindarle la experiencia más relevante recordando sus preferencias y visitas repetidas. Al hacer clic en \"Aceptar todo\", acepta el uso de TODAS las cookies. Sin embargo, puede visitar \"Configuración de cookies\" para proporcionar un consentimiento controlado.Ajustes de CookiesAcepto todoManage consent",
+    "h1": null,
+    "h2_h3": [
+      "Peluquería en Mutxamel, Alicante",
+      "Servicios de Peluquería",
+      "Peluquería",
+      "Estética",
+      "Tratamientos capilares",
+      "Sobre Nuestra Peluquería en Mutxamel.",
+      "Lo que opinan de nosotros"
+    ],
+    "contacts": {
+      "phone": "965 95 52 94",
+      "email": "info@peluqueriaudos.com",
+      "address": "C/ Músico Rafael Rodriguez Albert"
+    },
+    "cta_links": [],
+    "tech_stack": [
+      "WordPress",
+      "Elementor",
+      "Google Tag Manager"
+    ],
+    "error_reason": null
+  },
+  "reviews": {
+    "status": "pending_connector",
+    "avg_rating": null,
+    "review_count": null,
+    "reviews_sample": [],
+    "error_reason": "GOOGLE_PLACES_API_KEY no configurada. Ver opciones en modules/google.ts."
+  },
+  "social_profiles": {
+    "instagram": {
+      "url": "https://www.instagram.com/peluqueriaudos",
+      "status": "ok",
+      "username": "peluqueriaudos",
+      "followers": 94,
+      "posts_count": 4,
+      "posts_per_week": 0,
+      "avg_likes": 14,
+      "avg_comments": 1,
+      "engagement_ratio": 0.1489,
+      "bio": "💇 Peluquería unisex.\n🧖 Foto depilación \n💅Estética, uñas semipermanente. \nPunto de venta de productos.",
+      "bio_link": "http://www.peluqueriaudos.com/",
+      "recent_posts_sample": [
+        {
+          "type": "Sidecar",
+          "likes": 13,
+          "comments": 0,
+          "timestamp": "2024-05-16T11:27:57.000Z"
+        },
+        {
+          "type": "Sidecar",
+          "likes": 18,
+          "comments": 1,
+          "timestamp": "2022-04-03T14:19:50.000Z"
+        },
+        {
+          "type": "Image",
+          "likes": 14,
+          "comments": 3,
+          "timestamp": "2022-02-06T16:47:06.000Z"
+        },
+        {
+          "type": "Image",
+          "likes": 12,
+          "comments": 0,
+          "timestamp": "2022-02-06T16:45:30.000Z"
+        }
+      ],
+      "error_reason": null
+    },
+    "facebook": null,
+    "tiktok": null
+  },
+  "stack_details": {
+    "status": "ok",
+    "cms": "WordPress",
+    "frameworks": [
+      "Elementor"
+    ],
+    "marketing_tools": [
+      "Google Tag Manager"
+    ],
+    "booking_tools": [],
+    "error_reason": null
+  },
+  "sources": [
+    "https://www.peluqueriaudos.com",
+    "https://www.instagram.com/peluqueriaudos"
+  ],
+  "errors": [],
+  "generated_at": "2026-05-12T14:44:07.226Z"
+}
